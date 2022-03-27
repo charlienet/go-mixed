@@ -22,6 +22,15 @@ const (
 	_         = allChars + "/+"
 )
 
+var (
+	randSource mrnd.Source = mrnd.NewSource(time.Now().UnixNano())
+	randLock   sync.Mutex
+)
+
+func init() {
+	mrnd.Seed(time.Now().UnixNano())
+}
+
 type charScope struct {
 	bytes   []byte
 	length  int
@@ -65,9 +74,6 @@ var (
 	AllChars  = StringScope(allChars)                           // 所有字符
 )
 
-var randSource mrnd.Source = mrnd.NewSource(time.Now().UnixNano())
-var randLock sync.Mutex
-
 // 生成指定长度的随机字符串
 func (scope *charScope) RandString(length int) string {
 	n := length
@@ -110,11 +116,6 @@ func RandBytes(len int) ([]byte, error) {
 	return r, err
 }
 
-// func randNumber(max int64) (int64, error) {
-// 	r, err := rand.Int(rand.Reader, big.NewInt(max+1))
-// 	return r.Int64(), err
-// }
-
 func randInt63() int64 {
 	var v int64
 
@@ -126,6 +127,5 @@ func randInt63() int64 {
 }
 
 func randNumber2(max int) int {
-	rnd := mrnd.New(randSource)
-	return rnd.Intn(max)
+	return mrnd.Intn(max)
 }
