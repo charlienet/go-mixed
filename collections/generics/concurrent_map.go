@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
-
-	"github.com/charlienet/go-mixed/hash"
 )
 
 var _ Map[string, string] = &ConcurrnetMap[string, string]{}
@@ -91,12 +89,46 @@ func (m *ConcurrnetMap[K, V]) Count() int {
 }
 
 func (m *ConcurrnetMap[K, V]) getBucket(k K) Map[K, V] {
-	bytes := getBytes(k)
-
-	id := hash.XXHashUint64(bytes) % m.numOfBuckets
+	id := getTag(k) % m.numOfBuckets
 	return m.buckets[id]
 }
 
-func getBytes(k any) []byte {
-	return []byte(fmt.Sprintf("%v", k))
+func getTag[T comparable](v T) uint64 {
+	var vv any = v
+
+	switch vv.(type) {
+	case string:
+		return fnv64(vv.(string))
+	case int8:
+		return uint64(vv.(int8))
+	case uint8:
+		return uint64(vv.(uint8))
+	case int:
+		return uint64(vv.(int))
+	case int32:
+		return uint64(vv.(int32))
+	case uint32:
+		return uint64(vv.(uint32))
+	case int64:
+		return uint64(vv.(int64))
+	case uint64:
+		return vv.(uint64)
+	default:
+		return fnv64(fmt.Sprintf("%v", v))
+	}
+}
+
+const (
+	prime32 = uint64(16777619)
+)
+
+func fnv64(k string) uint64 {
+	var hash = uint64(2166136261)
+	l := len(k)
+	for i := 0; i < l; i++ {
+		hash *= prime32
+		hash ^= uint64(k[i])
+	}
+
+	return hash
 }

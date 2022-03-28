@@ -1,6 +1,10 @@
 package generics
 
-import "sync"
+import (
+	"sync"
+
+	"golang.org/x/exp/maps"
+)
 
 var _ Map[string, string] = &RWLockMap[string, string]{}
 
@@ -41,10 +45,7 @@ func (m *RWLockMap[K, V]) ForEach(f func(K, V)) {
 }
 
 func (m *RWLockMap[K, V]) Clone() Map[K, V] {
-	new := make(map[K]V, m.Count())
-	for k, v := range m.m {
-		new[k] = v
-	}
+	new := maps.Clone(m.m)
 
 	return &RWLockMap[K, V]{
 		m: new,

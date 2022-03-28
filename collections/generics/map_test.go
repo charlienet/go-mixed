@@ -29,3 +29,31 @@ func TestMapCount(t *testing.T) {
 	mm["a"] = "b"
 	assert.Equal(t, 1, len(mm))
 }
+
+func BenchmarkMap(b *testing.B) {
+	b.Run("RWLock", func(b *testing.B) {
+		m := generics.NewRWLockMap[string, string]()
+		doBenchamark(b, m)
+
+	})
+
+	b.Run("ConcurrnetMap", func(b *testing.B) {
+		doBenchamark(b, generics.NewConcurrnetMap[string, string]())
+	})
+}
+
+func doBenchamark(b *testing.B, m generics.Map[string, string]) {
+	var k = "abc"
+	var v = "bcd"
+
+	b.RunParallel(func(p *testing.PB) {
+		for p.Next() {
+			m.Set(k, v)
+			m.Get(k)
+			m.Get(k)
+			m.Get(k)
+			m.Delete(k)
+		}
+	})
+
+}
