@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"hash"
+	"hash/fnv"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/spaolacci/murmur3"
@@ -60,9 +61,21 @@ func XXhash(msg []byte) []byte {
 }
 
 func XXHashUint64(msg []byte) uint64 {
-	d := xxhash.New()
-	_, _ = d.Write(msg)
-	return d.Sum64()
+	h := xxhash.New()
+	_, _ = h.Write(msg)
+	return h.Sum64()
+}
+
+func Funv32(msg []byte) uint32 {
+	h := fnv.New32()
+	_, _ = h.Write(msg)
+	return h.Sum32()
+}
+
+func Funv64(msg []byte) uint64 {
+	h := fnv.New64()
+	_, _ = h.Write(msg)
+	return h.Sum64()
 }
 
 func sum(f func() hash.Hash, msg []byte) []byte {
