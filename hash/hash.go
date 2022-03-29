@@ -1,6 +1,7 @@
 package hash
 
 import (
+	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
@@ -14,41 +15,19 @@ import (
 	"github.com/tjfoc/gmsm/sm3"
 )
 
-func Sha1(msg []byte) []byte { return sum(sha1.New, msg) }
+func Md5(msg []byte) hashResult { return sum(md5.New, msg) }
 
-func Sha1Hex(msg []byte) string { return hex.EncodeToString(Sha1(msg)) }
+func Sha1(msg []byte) hashResult { return sum(sha1.New, msg) }
 
-func Sha1Base64(msg []byte) string { return base64.StdEncoding.EncodeToString(Sha1(msg)) }
+func Sha224(msg []byte) hashResult { return sum(sha256.New224, msg) }
 
-func Sha224(msg []byte) []byte { return sum(sha256.New224, msg) }
+func Sha256(msg []byte) hashResult { return sum(sha256.New, msg) }
 
-func Sha224Hex(msg []byte) string { return hex.EncodeToString(Sha224(msg)) }
+func Sha384(msg []byte) hashResult { return sum(sha512.New384, msg) }
 
-func Sha224Base64(msg []byte) string { return base64.StdEncoding.EncodeToString(Sha224(msg)) }
+func Sha512(msg []byte) hashResult { return sum(sha512.New, msg) }
 
-func Sha256(msg []byte) []byte { return sum(sha256.New, msg) }
-
-func Sha256Hex(msg []byte) string { return hex.EncodeToString(Sha256(msg)) }
-
-func Sha256Base64(msg []byte) string { return base64.StdEncoding.EncodeToString(Sha256(msg)) }
-
-func Sha384(msg []byte) []byte { return sum(sha512.New384, msg) }
-
-func Sha384Hex(msg []byte) string { return hex.EncodeToString(Sha384(msg)) }
-
-func Sha384Base64(msg []byte) string { return base64.StdEncoding.EncodeToString(Sha384(msg)) }
-
-func Sha512(msg []byte) []byte { return sum(sha512.New, msg) }
-
-func Sha512Hex(msg []byte) string { return hex.EncodeToString(Sha512(msg)) }
-
-func Sha512Base64(msg []byte) string { return base64.StdEncoding.EncodeToString(Sha512(msg)) }
-
-func Sm3(msg []byte) []byte { return sum(sm3.New, msg) }
-
-func Sm3Hex(msg []byte) string { return hex.EncodeToString(Sm3(msg)) }
-
-func Sm3Base64(msg []byte) string { return base64.StdEncoding.EncodeToString(Sm3(msg)) }
+func Sm3(msg []byte) hashResult { return sum(sm3.New, msg) }
 
 func Murmur3(msg []byte) uint64 {
 	return murmur3.Sum64(msg)
@@ -78,9 +57,27 @@ func Funv64(msg []byte) uint64 {
 	return h.Sum64()
 }
 
-func sum(f func() hash.Hash, msg []byte) []byte {
+type hashResult []byte
+
+func sum(f func() hash.Hash, msg []byte) hashResult {
 	h := f()
 
 	_, _ = h.Write(msg)
 	return h.Sum(nil)
+}
+
+func (r hashResult) Hex() string {
+	return hex.EncodeToString(r)
+}
+
+func (r hashResult) Base64() string {
+	return base64.StdEncoding.EncodeToString(r)
+}
+
+func (r hashResult) Bytes() []byte {
+	return r
+}
+
+func (r hashResult) String() string {
+	return r.Hex()
 }
