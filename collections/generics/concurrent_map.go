@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
+
+	"github.com/charlienet/go-mixed/bytesconv"
+	"github.com/charlienet/go-mixed/hash"
 )
 
 var _ Map[string, string] = &ConcurrnetMap[string, string]{}
@@ -98,7 +101,7 @@ func getTag[T comparable](v T) uint64 {
 
 	switch vv.(type) {
 	case string:
-		return fnv64(vv.(string))
+		return fnv(vv.(string))
 	case int8:
 		return uint64(vv.(int8))
 	case uint8:
@@ -114,21 +117,11 @@ func getTag[T comparable](v T) uint64 {
 	case uint64:
 		return vv.(uint64)
 	default:
-		return fnv64(fmt.Sprintf("%v", v))
+		return fnv(fmt.Sprintf("%v", v))
 	}
 }
 
-const (
-	prime32 = uint64(16777619)
-)
-
-func fnv64(k string) uint64 {
-	var hash = uint64(2166136261)
-	l := len(k)
-	for i := 0; i < l; i++ {
-		hash *= prime32
-		hash ^= uint64(k[i])
-	}
-
-	return hash
+func fnv(k string) uint64 {
+	bytes := bytesconv.StringToBytes(k)
+	return uint64(hash.Funv32(bytes))
 }
