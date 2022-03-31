@@ -60,29 +60,29 @@ func (l *logrusWrpper) Warn(args ...any) {
 }
 
 func (l *logrusWrpper) Error(args ...any) {
-	l.Error(args...)
+	l.logger.Error(args...)
 }
 
 func (l *logrusWrpper) Warnf(format string, args ...any) {
-	l.Warnf(format, args...)
+	l.logger.Warnf(format, args...)
 }
 
 func (l *logrusWrpper) Errorf(format string, args ...any) {
-	l.Errorf(format, args...)
+	l.logger.Errorf(format, args...)
 }
 
 func (l *logrusWrpper) Fatalf(format string, args ...any) {
-	l.Fatalf(format, args...)
+	l.logger.Fatalf(format, args...)
 }
 
-func (entry *logrusWrpper) Println(args ...interface{}) {
-	entry.logger.Infoln(args...)
+func (l *logrusWrpper) Println(args ...any) {
+	l.logger.Infoln(args...)
 }
 
-func (entry *logrusWrpper) Print(args ...interface{}) {
-	entry.Info(args...)
+func (l *logrusWrpper) Print(args ...any) {
+	l.logger.Info(args...)
 }
 
-func (entry *logrusWrpper) Printf(format string, args ...interface{}) {
-	entry.Infof(format, args...)
+func (l *logrusWrpper) Printf(format string, args ...any) {
+	l.logger.Infof(format, args...)
 }
