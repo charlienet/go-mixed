@@ -1,6 +1,13 @@
 package logx
 
-import "github.com/sirupsen/logrus"
+import (
+	"fmt"
+	"path"
+	"runtime"
+
+	nested "github.com/antonfisher/nested-logrus-formatter"
+	"github.com/sirupsen/logrus"
+)
 
 type logrusWrpper struct {
 	logger *logrus.Entry
@@ -9,9 +16,21 @@ type logrusWrpper struct {
 func NewLogrus() Logger {
 	logger := logrus.New()
 
+	logger.SetFormatter(
+		&nested.Formatter{
+			TimestampFormat:       "2006-01-02 15:04:05.999",
+			NoColors:              false,
+			CustomCallerFormatter: nestedCallerFormatter,
+		})
+
 	return &logrusWrpper{
 		logger: logrus.NewEntry(logger),
 	}
+}
+
+func nestedCallerFormatter(f *runtime.Frame) string {
+	_, filename := path.Split(f.File)
+	return fmt.Sprintf(" (%s() %s:%d)", f.Function, filename, f.Line)
 }
 
 func (l *logrusWrpper) SetLevel(level Level) {
