@@ -11,7 +11,7 @@ import (
 )
 
 func TestRandString(t *testing.T) {
-	t.Log(rand.AllChars.RandString(20))
+	t.Log(rand.AllChars.Generate(20))
 
 	// b, err := rand.RandBytes(32)
 	// t.Log(err)
@@ -19,7 +19,7 @@ func TestRandString(t *testing.T) {
 }
 
 func TestRandHex(t *testing.T) {
-	h := rand.Hex.RandString(8)
+	h := rand.Hex.Generate(8)
 	t.Log(h)
 }
 
@@ -27,43 +27,61 @@ func TestRandMax(t *testing.T) {
 	mrnd.Seed(time.Now().UnixNano())
 }
 
+func TestCryptRand(t *testing.T) {
+	t.Log(rand.CryptoIntn(56545))
+}
+
+func TestGenericsInterger(t *testing.T) {
+	var max int32 = 55
+
+	for i := 0; i < 1000; i++ {
+		if rand.Intn(max) >= max {
+			t.Fatal("生成的值大于最大值:", max)
+		}
+	}
+}
+
+func TestRange(t *testing.T) {
+	min := 20
+	max := 200000
+	for i := 0; i < 100000000; i++ {
+		n := rand.IntRange(min, max)
+		if n < min {
+			t.Fatal("生成的值小于最小值:", min, n)
+		}
+
+		if n >= max {
+			t.Fatal("生成的值大于最大值:", min, n)
+		}
+	}
+}
+
 func BenchmarkParallel(b *testing.B) {
-	rand.Hex.RandString(16)
+	rand.Hex.Generate(16)
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			rand.Hex.RandString(16)
+			rand.Hex.Generate(16)
 		}
 	})
 }
 
 func BenchmarkNoop(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		rand.AllChars.RandString(16)
+		rand.AllChars.Generate(16)
 	}
 }
 
 func BenchmarkRandString(b *testing.B) {
 
 	for i := 0; i < 10; i++ {
-		rand.Hex.RandString(10)
+		rand.Hex.Generate(10)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rand.Hex.RandString(20)
+		rand.Hex.Generate(20)
 	}
-
-	// b.Run("randString", func(b *testing.B) {
-
-	// 	for i := 0; i < b.N; i++ {
-	// 		rand.Hex.RandString(256)
-	// 	}
-	// })
-
-	// for i := 0; i < b.N; i++ {
-	// 	rand.RandBytes(16)
-	// }
 }
 
 func BenchmarkString(b *testing.B) {
@@ -115,4 +133,19 @@ func BenchmarkConcatString(b *testing.B) {
 			}
 		}
 	})
+}
+
+func BenchmarkRand(b *testing.B) {
+	b.Run("math/rand", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			rand.Intn(100)
+		}
+	})
+
+	b.Run("crypto/rand", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			rand.CryptoIntn(100)
+		}
+	})
+
 }

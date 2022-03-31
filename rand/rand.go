@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"math/big"
 	mrnd "math/rand"
 
 	"github.com/charlienet/go-mixed/bytesconv"
@@ -75,7 +76,7 @@ var (
 )
 
 // 生成指定长度的随机字符串
-func (scope *charScope) RandString(length int) string {
+func (scope *charScope) Generate(length int) string {
 	n := length
 	if scope.lenFunc != nil {
 		n = scope.lenFunc(n)
@@ -99,15 +100,32 @@ func (scope *charScope) RandString(length int) string {
 	return bytesconv.BytesToString(ret)
 }
 
-// 获取指定范围内的随机数
-func RandInt(min, max int) int {
-	n := randNumber2(max - min)
-	return n + min
+type scopeConstraint interface {
+	~int | ~int32 | ~int64
 }
 
-// 生成指定范围的随机数
-func RandInt32(min, max int32) int32 {
-	return int32(RandInt(int(min), int(max)))
+// 生成区间 n >= 0, n < max
+func Intn[T scopeConstraint](max T) T {
+	n := mrnd.Int63n(int64(max))
+	return T(n) % max
+}
+
+// 生成区间 n >= min, n < max
+func IntRange[T scopeConstraint](min, max T) T {
+	n := Intn(max - min)
+	return T(n + min)
+}
+
+func CryptoRange[T scopeConstraint](min, max T) T {
+	n := CryptoIntn(max - min)
+	return min + n
+}
+
+func CryptoIntn[T ~int | ~int32 | ~int64](max T) T {
+	b := big.NewInt(int64(max))
+	n, _ := rand.Int(rand.Reader, b)
+
+	return T(n.Int64())
 }
 
 func RandBytes(len int) ([]byte, error) {
