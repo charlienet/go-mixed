@@ -6,7 +6,7 @@ type logrusWrpper struct {
 	logger *logrus.Entry
 }
 
-func CreateLogrus() Logger {
+func NewLogrus() Logger {
 	logger := logrus.New()
 
 	return &logrusWrpper{
