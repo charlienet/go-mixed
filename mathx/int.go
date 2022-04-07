@@ -1,19 +1,16 @@
 package mathx
 
-// MaxInt returns the larger one of a and b.
-func MaxInt(a, b int) int {
-	if a > b {
-		return a
-	}
+import (
+	"github.com/charlienet/go-mixed/expr"
+	"golang.org/x/exp/constraints"
+)
 
-	return b
+// MaxInt returns the larger one of v1 and v2.
+func Max[T constraints.Ordered](v1, v2 T) T {
+	return expr.If(v1 > v2, v1, v2)
 }
 
-// MinInt returns the smaller one of a and b.
-func MinInt(a, b int) int {
-	if a < b {
-		return a
-	}
-
-	return b
+// MinInt returns the smaller one of v1 and v2.
+func Min[T constraints.Ordered](v1, v2 T) T {
+	return expr.If(v1 < v2, v1, v2)
 }
