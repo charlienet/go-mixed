@@ -3,9 +3,9 @@ package collections
 import "sync"
 
 type ArrayStack struct {
-	array []interface{} // 底层切片
-	size  int           // 栈的元素数量
-	lock  sync.Mutex    // 为了并发安全使用的锁
+	array []any      // 底层切片
+	size  int        // 栈的元素数量
+	lock  sync.Mutex // 为了并发安全使用的锁
 }
 
 func NewArrayStack[T any]() *ArrayStack {
@@ -13,7 +13,7 @@ func NewArrayStack[T any]() *ArrayStack {
 }
 
 // 入栈
-func (stack *ArrayStack) Push(v interface{}) {
+func (stack *ArrayStack) Push(v any) {
 	stack.lock.Lock()
 	defer stack.lock.Unlock()
 
@@ -24,7 +24,7 @@ func (stack *ArrayStack) Push(v interface{}) {
 	stack.size = stack.size + 1
 }
 
-func (stack *ArrayStack) Pop() interface{} {
+func (stack *ArrayStack) Pop() any {
 	stack.lock.Lock()
 	defer stack.lock.Unlock()
 
@@ -39,7 +39,7 @@ func (stack *ArrayStack) Pop() interface{} {
 	//stack.array = stack.array[0 : stack.size-1]
 
 	// 创建新的数组，空间占用不会越来越大，但可能移动元素次数过多
-	newArray := make([]interface{}, stack.size-1, stack.size-1)
+	newArray := make([]any, stack.size-1, stack.size-1)
 	for i := 0; i < stack.size-1; i++ {
 		newArray[i] = stack.array[i]
 	}
@@ -51,7 +51,7 @@ func (stack *ArrayStack) Pop() interface{} {
 }
 
 // 获取栈顶元素
-func (stack *ArrayStack) Peek() interface{} {
+func (stack *ArrayStack) Peek() any {
 	// 栈中元素已空
 	if stack.size == 0 {
 		panic("empty")

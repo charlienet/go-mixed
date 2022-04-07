@@ -4,7 +4,7 @@ import "sync"
 
 // 数组队列，先进先出
 type ArrayQueue struct {
-	array []interface{} // 底层切片
+	array []any // 底层切片
 	size  int           // 队列的元素数量
 	lock  sync.Mutex    // 为了并发安全使用的锁
 }
@@ -14,7 +14,7 @@ func NewArrayQueue[T any]() *ArrayQueue {
 }
 
 // 入队
-func (queue *ArrayQueue) Add(v interface{}) {
+func (queue *ArrayQueue) Add(v any) {
 	queue.lock.Lock()
 	defer queue.lock.Unlock()
 
@@ -26,7 +26,7 @@ func (queue *ArrayQueue) Add(v interface{}) {
 }
 
 // 出队
-func (queue *ArrayQueue) Remove() interface{} {
+func (queue *ArrayQueue) Remove() any {
 	queue.lock.Lock()
 	defer queue.lock.Unlock()
 
@@ -48,7 +48,7 @@ func (queue *ArrayQueue) Remove() interface{} {
 	*/
 
 	// 创建新的数组，移动次数过多
-	newArray := make([]interface{}, queue.size-1)
+	newArray := make([]any, queue.size-1)
 	for i := 1; i < queue.size; i++ {
 		// 从老数组的第一位开始进行数据移动
 		newArray[i-1] = queue.array[i]

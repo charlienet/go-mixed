@@ -13,7 +13,7 @@ import (
 
 // 下划线
 type SnakeCase struct {
-	Value interface{}
+	Value any
 }
 
 func (c SnakeCase) MarshalJSON() ([]byte, error) {
@@ -35,7 +35,7 @@ func (c SnakeCase) MarshalJSON() ([]byte, error) {
 
 // 驼峰
 type CamelCase struct {
-	Value interface{}
+	Value any
 }
 
 func (c CamelCase) MarshalJSON() ([]byte, error) {
@@ -106,7 +106,7 @@ func NewBuffer() *Buffer {
 	return &Buffer{Buffer: new(bytes.Buffer)}
 }
 
-func (b *Buffer) Append(i interface{}) *Buffer {
+func (b *Buffer) Append(i any) *Buffer {
 	switch val := i.(type) {
 	case int:
 		b.append(strconv.Itoa(val))
