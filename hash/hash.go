@@ -5,14 +5,36 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"errors"
 	"hash"
 	"hash/fnv"
+	"strings"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/charlienet/go-mixed/bytesconv"
 	"github.com/spaolacci/murmur3"
 	"github.com/tjfoc/gmsm/sm3"
 )
+
+type HashFunc func([]byte) bytesconv.BytesResult
+
+var hashFuncs = map[string]HashFunc{
+	"MD5":    Md5,
+	"SHA1":   Sha1,
+	"SHA224": Sha224,
+	"SHA256": Sha256,
+	"SHA384": Sha384,
+	"SHA512": Sha512,
+	"SM3":    Sm3,
+}
+
+func ByName(name string) (HashFunc, error) {
+	if f, ok := hashFuncs[strings.ToUpper(name)]; ok {
+		return f, nil
+	}
+
+	return nil, errors.New("Unsupported hash functions")
+}
 
 func Md5(msg []byte) bytesconv.BytesResult { return sum(md5.New, msg) }
 
