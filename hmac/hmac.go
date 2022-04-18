@@ -1,6 +1,7 @@
 package hmac
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha1"
@@ -24,6 +25,29 @@ var hmacFuncs = map[string]HMacFunc{
 	"SHA384": Sha384,
 	"SHA512": Sha512,
 	"SM3":    Sm3,
+}
+
+type hashComparer struct {
+	key      []byte
+	hashFunc HMacFunc
+}
+
+func New(fname string, key []byte) (*hashComparer, error) {
+	f, err := ByName(fname)
+	if err != nil {
+		return nil, err
+	}
+
+	return &hashComparer{
+		key:      key,
+		hashFunc: f,
+	}, nil
+}
+
+func (c *hashComparer) Verify(msg, target []byte) bool {
+	ret := c.hashFunc(c.key, msg)
+
+	return bytes.Compare(ret.Bytes(), target) == 0
 }
 
 func ByName(name string) (HMacFunc, error) {

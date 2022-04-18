@@ -1,6 +1,7 @@
 package hash
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -26,6 +27,28 @@ var hashFuncs = map[string]HashFunc{
 	"SHA384": Sha384,
 	"SHA512": Sha512,
 	"SM3":    Sm3,
+}
+
+type hashComparer struct {
+	hashFunc HashFunc
+}
+
+func New(fname string) (*hashComparer, error) {
+	f, err := ByName(fname)
+	if err != nil {
+		return nil, err
+	}
+
+	return &hashComparer{
+		hashFunc: f,
+	}, nil
+}
+
+func (c *hashComparer) Verify(msg, target []byte) bool {
+	ret := c.hashFunc(msg)
+	ret.Bytes()
+
+	return bytes.Compare(ret.Bytes(), target) == 0
 }
 
 func ByName(name string) (HashFunc, error) {
