@@ -1,5 +1,11 @@
 package logx
 
+var std = NewLogrus()
+
+func StandardLogger() Logger {
+	return std
+}
+
 // Fields type, used to pass to `WithFields`.
 type Fields map[string]any
 
@@ -13,7 +19,7 @@ type Logger interface {
 	Debugf(format string, args ...any)
 	Info(args ...any)
 	Infof(format string, args ...any)
-	Warn(args ...any)	
+	Warn(args ...any)
 	Warnf(format string, args ...any)
 	Error(args ...any)
 	Errorf(format string, args ...any)

@@ -18,7 +18,7 @@ func NewLogrus() Logger {
 
 	logger.SetFormatter(
 		&nested.Formatter{
-			TimestampFormat:       "2006-01-02 15:04:05.999",
+			TimestampFormat:       "2006-01-02 15:04:05.000",
 			NoColors:              false,
 			CustomCallerFormatter: nestedCallerFormatter,
 		})
@@ -88,7 +88,7 @@ func (l *logrusWrpper) Errorf(format string, args ...any) {
 }
 
 func (l *logrusWrpper) Fatal(args ...any) {
-	l.logrus.Fatal(args)
+	l.logrus.Fatal(args...)
 }
 
 func (l *logrusWrpper) Fatalf(format string, args ...any) {
