@@ -3,12 +3,15 @@ package crypto
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"math/big"
 	"strconv"
 )
+
+// var _ Signer = &ecdsaOptions{}
 
 type ecdsaOptions struct {
 	hashOptions
@@ -89,12 +92,16 @@ func ParsePublicKey(pem []byte) Option {
 	return publicKeyOption(pem)
 }
 
+func (opt *ecdsaOptions) Sign(msg []byte) ([]byte, error) {
+	sum := opt.getHash(msg)
+	return ecdsa.SignASN1(rand.Reader, opt.prv, sum)
+}
+
 func (opt *ecdsaOptions) Verify(msg, rText, sText []byte) bool {
 	var r, s big.Int
 	_ = r.UnmarshalText(rText)
 	_ = s.UnmarshalText(sText)
 
 	sum := opt.getHash(msg)
-
 	return ecdsa.Verify(opt.pub, sum, &r, &s)
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/tjfoc/gmsm/sm4"
 )
 
+var _ ISymmetric = &sm4EcbInstance{}
+
 type sm4Instance struct {
 	key []byte
 }

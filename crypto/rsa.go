@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-
+var _ IAsymmetric = &rsaInstance{}
 
 type rsaInstance struct {
 	hashOptions

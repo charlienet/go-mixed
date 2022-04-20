@@ -15,6 +15,8 @@ var (
 	C1C2C3      = 1
 )
 
+var _ IAsymmetric = &sm2Instance{}
+
 type sm2Instance struct {
 	mode int
 	prk  *s.PrivateKey
