@@ -2,7 +2,6 @@ package generics
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"golang.org/x/exp/constraints"
@@ -21,6 +20,32 @@ func NewSortMap[K constraints.Ordered, V any](m map[K]V) *mapSorter[K, V] {
 	}
 }
 
+func (s *mapSorter[K, V]) Set(key K, value V) {
+	s.m[key] = value
+	s.keys = append(s.keys, key)
+}
+
+func (s *mapSorter[K, V]) Get(key K) (V, bool) {
+	v, ok := s.m[key]
+	return v, ok
+}
+
+func (s *mapSorter[K, V]) Delete(key K) {
+	delete(s.m, key)
+
+	keys := keys(s.m)
+	s.keys = keys
+}
+
+func (s *mapSorter[K, V]) Clear() {
+	s.m = map[K]V{}
+	s.keys = []K{}
+}
+
+func (s *mapSorter[K, V]) Count() int {
+	return len(s.m)
+}
+
 func (s *mapSorter[K, V]) Asc() *mapSorter[K, V] {
 	keys := s.keys
 	slices.Sort(keys)
@@ -34,12 +59,8 @@ func (s *mapSorter[K, V]) Asc() *mapSorter[K, V] {
 func (s *mapSorter[K, V]) Desc() *mapSorter[K, V] {
 	keys := s.keys
 
-	// slices.SortFunc(keys, func(a, b E) bool {
-	// 	return a > b
-	// })
-
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] > keys[j]
+	slices.SortFunc(keys, func(a, b K) bool {
+		return a > b
 	})
 
 	return &mapSorter[K, V]{
