@@ -1,9 +1,16 @@
 package logx
 
-var std = NewLogrus()
+var std = defaultLogger()
 
 func StandardLogger() Logger {
 	return std
+}
+
+func defaultLogger() Logger {
+	return NewLogrus(
+		WithOptions(LogrusOptions{Level: "Debug"}),
+		WithOutput(LogrusOutputOptions{}),
+		WithFormatter(NewNestedFormatter(NestedFormatterOption{Color: true})))
 }
 
 // Fields type, used to pass to `WithFields`.
