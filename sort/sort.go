@@ -1,6 +1,7 @@
 package sort
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -57,6 +58,12 @@ func (s *mapSorter[T]) Values() []T {
 	}
 
 	return ret
+}
+
+func (s *mapSorter[T]) String() string {
+	return fmt.Sprintf("map[%s]", s.Join(" ", func(k string, v T) string {
+		return fmt.Sprintf("%s:%v", k, v)
+	}))
 }
 
 func keys[T any](m map[string]T) []string {

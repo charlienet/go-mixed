@@ -23,6 +23,8 @@ func TestMapSortInt(t *testing.T) {
 	}
 
 	ret := SortByKey(m).Desc().Values()
+	t.Log(SortByKey(m).Desc())
+	t.Log(SortByKey(m).Asc())
 
 	t.Log(ret)
 }
@@ -33,6 +35,7 @@ func TestJoin(t *testing.T) {
 		"Abc": "abc",
 		"Efg": "efg",
 	}
+	t.Log(m)
 
 	j := SortByKey(m).Asc().Join("&", func(k string, v any) string {
 		return fmt.Sprintf("%s=%v", k, v)
