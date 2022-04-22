@@ -28,7 +28,7 @@ func ToMap(o any, opts ...optionFunc) map[string]any {
 			continue
 		}
 
-		m[field.name] = source.Interface()
+		m[opt.NameFunc(field.name)] = source.Interface()
 	}
 
 	return m
