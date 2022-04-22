@@ -13,8 +13,8 @@ import (
 func TestConcurrentMap(t *testing.T) {
 	t.Log(runtime.GOMAXPROCS(runtime.NumCPU()))
 
-	key := "abc"
-	value := "bcd"
+	key := "aaabc"
+	value := "aabcd"
 
 	m := generics.NewConcurrnetMap[string, string]()
 	m.Set(key, value)
