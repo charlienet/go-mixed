@@ -1,11 +1,8 @@
 package structs
 
 import (
-	"reflect"
 	"strings"
 	"unicode"
-
-	"github.com/charlienet/go-mixed/expr"
 )
 
 type tagOptions string
@@ -19,6 +16,7 @@ func (o tagOptions) Contains(optionName string) bool {
 	if len(o) == 0 {
 		return false
 	}
+	
 	s := string(o)
 	for s != "" {
 		var name string
@@ -27,21 +25,8 @@ func (o tagOptions) Contains(optionName string) bool {
 			return true
 		}
 	}
+
 	return false
-}
-
-type fieldOption struct {
-	name      string
-	omitEmpty bool
-}
-
-func getFieldOption(fi reflect.StructField) fieldOption {
-	name, opts := parseTag(fi.Tag.Get(tagName))
-
-	return fieldOption{
-		name:      expr.If(isValidTag(name), name, fi.Name),
-		omitEmpty: opts.Contains("omitempty"),
-	}
 }
 
 func isValidTag(s string) bool {
@@ -56,5 +41,6 @@ func isValidTag(s string) bool {
 			return false
 		}
 	}
+
 	return true
 }
