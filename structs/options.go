@@ -7,6 +7,7 @@ import (
 type optionFunc func(*option)
 
 type option struct {
+	SkipFields    []string
 	TagName       string
 	DeepCopy      bool
 	Omitempty     bool
@@ -36,6 +37,18 @@ func Omitempty() optionFunc {
 func DeepCopy() optionFunc {
 	return func(o *option) {
 		o.DeepCopy = true
+	}
+}
+
+func SkipField(field string) optionFunc {
+	return func(o *option) {
+		o.SkipFields = append(o.SkipFields, field)
+	}
+}
+
+func SkipFields(fields []string) optionFunc {
+	return func(o *option) {
+		o.SkipFields = append(o.SkipFields, fields...)
 	}
 }
 

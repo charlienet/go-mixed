@@ -21,9 +21,21 @@ func TestStructToMap(t *testing.T) {
 		OmitEmpty: 0,
 	}
 
-	t.Log(structs.ToMap(o, structs.TagName("struct")))
-	t.Log(structs.ToMap(o, structs.IgnoreEmpty()))
-	t.Log(structs.ToMap(o, structs.Omitempty()))
-	t.Log(structs.ToMap(o, structs.Lcfirst()))
-	t.Log(structs.ToMap(o, structs.Camel2Case()))
+	t.Log(structs.Struct2Map(o, structs.TagName("struct")))
+	t.Log(structs.Struct2Map(o, structs.IgnoreEmpty()))
+	t.Log(structs.Struct2Map(o, structs.Omitempty()))
+	t.Log(structs.Struct2Map(o, structs.Lcfirst()))
+	t.Log(structs.Struct2Map(o, structs.Camel2Case()))
+}
+
+func TestMapToStruct(t *testing.T) {
+
+}
+
+func TestMap2Map(t *testing.T) {
+	source := map[string]any{
+		"Abc": 143,
+	}
+
+	structs.New(source)
 }

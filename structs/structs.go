@@ -67,6 +67,12 @@ func (s *Struct) ToMap() map[string]any {
 	return m
 }
 
+/*
+	struct -> map
+	struct -> struct
+	map	 -> struct
+	map	 -> map
+*/
 func (s *Struct) Copy(dest any) error {
 	to := indirect(reflect.ValueOf(dest))
 
@@ -102,7 +108,11 @@ func (s *Struct) getByName(name string) (field, bool) {
 	return field{}, false
 }
 
-func ToMap(o any, opts ...optionFunc) map[string]any {
+func Map2Struct(o map[string]any, dst any) {
+
+}
+
+func Struct2Map(o any, opts ...optionFunc) map[string]any {
 	return New(o, opts...).ToMap()
 }
 
@@ -112,6 +122,15 @@ func Copy(source, dst any, opts ...optionFunc) {
 
 func parseFields(t reflect.Value, opt option) []field {
 	typ := indirectType(t.Type())
+
+	if typ.Kind() == reflect.Struct {
+		return parseStructFields(typ, opt)
+	}
+
+	return nil
+}
+
+func parseStructFields(typ reflect.Type, opt option) []field {
 	num := typ.NumField()
 	fields := make([]field, 0, num)
 	for i := 0; i < num; i++ {
