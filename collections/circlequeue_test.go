@@ -3,7 +3,7 @@ package collections
 import "testing"
 
 func TestCircleQueue(t *testing.T) {
-	q := NewCircleQueue(10)
+	q := NewCircleQueue[string](10)
 
 	t.Log("Size:", q.Size())
 	for i := 0; i < 10; i++ {

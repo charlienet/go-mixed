@@ -2,72 +2,79 @@ package collections
 
 import "sync"
 
-type ArrayStack struct {
-	array []any      // 底层切片
+var _ Stack[string] = &ArrayStack[string]{}
+
+type Stack[T any] interface {
+	Push(T)
+	Pop() T
+}
+
+type ArrayStack[T any] struct {
+	array []T        // 底层切片
 	size  int        // 栈的元素数量
 	lock  sync.Mutex // 为了并发安全使用的锁
 }
 
-func NewArrayStack[T any]() *ArrayStack {
-	return &ArrayStack{}
+func NewArrayStack[T any]() *ArrayStack[T] {
+	return &ArrayStack[T]{}
 }
 
 // 入栈
-func (stack *ArrayStack) Push(v any) {
-	stack.lock.Lock()
-	defer stack.lock.Unlock()
+func (s *ArrayStack[T]) Push(v T) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	// 放入切片中，后进的元素放在数组最后面
-	stack.array = append(stack.array, v)
+	s.array = append(s.array, v)
 
 	// 栈中元素数量+1
-	stack.size = stack.size + 1
+	s.size = s.size + 1
 }
 
-func (stack *ArrayStack) Pop() any {
-	stack.lock.Lock()
-	defer stack.lock.Unlock()
+func (s *ArrayStack[T]) Pop() T {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
-	if stack.size == 0 {
+	if s.size == 0 {
 		panic("empty")
 	}
 
 	// 栈顶元素
-	v := stack.array[stack.size-1]
+	v := s.array[s.size-1]
 
 	// 切片收缩，但可能占用空间越来越大
 	//stack.array = stack.array[0 : stack.size-1]
 
 	// 创建新的数组，空间占用不会越来越大，但可能移动元素次数过多
-	newArray := make([]any, stack.size-1, stack.size-1)
-	for i := 0; i < stack.size-1; i++ {
-		newArray[i] = stack.array[i]
+	newArray := make([]T, s.size-1, s.size-1)
+	for i := 0; i < s.size-1; i++ {
+		newArray[i] = s.array[i]
 	}
-	stack.array = newArray
+	s.array = newArray
 
 	// 栈中元素数量-1
-	stack.size = stack.size - 1
+	s.size = s.size - 1
 	return v
 }
 
 // 获取栈顶元素
-func (stack *ArrayStack) Peek() any {
+func (s *ArrayStack[T]) Peek() T {
 	// 栈中元素已空
-	if stack.size == 0 {
+	if s.size == 0 {
 		panic("empty")
 	}
 
 	// 栈顶元素值
-	v := stack.array[stack.size-1]
+	v := s.array[s.size-1]
 	return v
 }
 
 // 栈大小
-func (stack *ArrayStack) Size() int {
-	return stack.size
+func (s *ArrayStack[T]) Size() int {
+	return s.size
 }
 
 // 栈是否为空
-func (stack *ArrayStack) IsEmpty() bool {
-	return stack.size == 0
+func (s *ArrayStack[T]) IsEmpty() bool {
+	return s.size == 0
 }

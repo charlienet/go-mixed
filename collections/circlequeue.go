@@ -2,23 +2,23 @@ package collections
 
 import "fmt"
 
-type CircleQueue struct {
+type CircleQueue[T any] struct {
 	data  []any
 	cap   int
 	front int
 	rear  int
 }
 
-func NewCircleQueue(cap int) *CircleQueue {
+func NewCircleQueue[T any](cap int) *CircleQueue[T] {
 	cap++
 
-	return &CircleQueue{
+	return &CircleQueue[T]{
 		data: make([]any, cap),
 		cap:  cap,
 	}
 }
 
-func (q *CircleQueue) Push(data any) bool {
+func (q *CircleQueue[T]) Push(data any) bool {
 	if (q.rear+1)%q.cap == q.front {
 		return false
 	}
@@ -27,7 +27,7 @@ func (q *CircleQueue) Push(data any) bool {
 	q.rear = (q.rear + 1) % q.cap
 	return true
 }
-func (q *CircleQueue) Pop() any {
+func (q *CircleQueue[T]) Pop() any {
 	if q.rear == q.front {
 		return nil
 	}
@@ -38,18 +38,18 @@ func (q *CircleQueue) Pop() any {
 	return data
 }
 
-func (q *CircleQueue) Size() int {
+func (q *CircleQueue[T]) Size() int {
 	return (q.rear - q.front + q.cap) % q.cap
 }
 
-func (q *CircleQueue) IsFull() bool {
+func (q *CircleQueue[T]) IsFull() bool {
 	return (q.rear+1)%q.cap == q.front
 }
 
-func (q *CircleQueue) IsEmpty() bool {
+func (q *CircleQueue[T]) IsEmpty() bool {
 	return q.front == q.rear
 }
 
-func (q *CircleQueue) Show() string {
+func (q *CircleQueue[T]) Show() string {
 	return fmt.Sprintf("%v", q.data)
 }

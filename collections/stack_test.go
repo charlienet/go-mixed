@@ -7,7 +7,7 @@ import (
 )
 
 func TestStack(t *testing.T) {
-	arrayStack := new(collections.ArrayStack)
+	arrayStack := collections.NewArrayStack[string]()
 	arrayStack.Push("cat")
 	arrayStack.Push("dog")
 	arrayStack.Push("hen")
@@ -19,6 +19,6 @@ func TestStack(t *testing.T) {
 	arrayStack.Push("drag")
 	t.Log("pop:", arrayStack.Pop())
 	arrayStack.Push("test")
-	s := arrayStack.Pop().(string)
+	s := arrayStack.Pop()
 	t.Log(s)
 }

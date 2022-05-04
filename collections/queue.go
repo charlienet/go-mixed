@@ -3,40 +3,40 @@ package collections
 import "sync"
 
 // 数组队列，先进先出
-type ArrayQueue struct {
-	array []any // 底层切片
-	size  int           // 队列的元素数量
-	lock  sync.Mutex    // 为了并发安全使用的锁
+type ArrayQueue[T any] struct {
+	array []T        // 底层切片
+	size  int        // 队列的元素数量
+	lock  sync.Mutex // 为了并发安全使用的锁
 }
 
-func NewArrayQueue[T any]() *ArrayQueue {
-	return &ArrayQueue{}
+func NewArrayQueue[T any]() *ArrayQueue[T] {
+	return &ArrayQueue[T]{}
 }
 
 // 入队
-func (queue *ArrayQueue) Add(v any) {
-	queue.lock.Lock()
-	defer queue.lock.Unlock()
+func (q *ArrayQueue[T]) Add(v T) {
+	q.lock.Lock()
+	defer q.lock.Unlock()
 
 	// 放入切片中，后进的元素放在数组最后面
-	queue.array = append(queue.array, v)
+	q.array = append(q.array, v)
 
 	// 队中元素数量+1
-	queue.size = queue.size + 1
+	q.size = q.size + 1
 }
 
 // 出队
-func (queue *ArrayQueue) Remove() any {
-	queue.lock.Lock()
-	defer queue.lock.Unlock()
+func (q *ArrayQueue[T]) Remove() any {
+	q.lock.Lock()
+	defer q.lock.Unlock()
 
 	// 队中元素已空
-	if queue.size == 0 {
+	if q.size == 0 {
 		panic("empty")
 	}
 
 	// 队列最前面元素
-	v := queue.array[0]
+	v := q.array[0]
 
 	/*    直接原位移动，但缩容后继的空间不会被释放
 	      for i := 1; i < queue.size; i++ {
@@ -48,24 +48,24 @@ func (queue *ArrayQueue) Remove() any {
 	*/
 
 	// 创建新的数组，移动次数过多
-	newArray := make([]any, queue.size-1)
-	for i := 1; i < queue.size; i++ {
+	newArray := make([]T, q.size-1)
+	for i := 1; i < q.size; i++ {
 		// 从老数组的第一位开始进行数据移动
-		newArray[i-1] = queue.array[i]
+		newArray[i-1] = q.array[i]
 	}
-	queue.array = newArray
+	q.array = newArray
 
 	// 队中元素数量-1
-	queue.size = queue.size - 1
+	q.size = q.size - 1
 	return v
 }
 
 // 栈大小
-func (queue *ArrayQueue) Size() int {
-	return queue.size
+func (q *ArrayQueue[T]) Size() int {
+	return q.size
 }
 
 // 栈是否为空
-func (queue *ArrayQueue) IsEmpty() bool {
-	return queue.size == 0
+func (q *ArrayQueue[T]) IsEmpty() bool {
+	return q.size == 0
 }
