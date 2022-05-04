@@ -7,7 +7,10 @@ type List[T any] interface {
 	ToSlice() []T
 }
 
-
-type Queue interface{
-	
+type Queue[T any] interface {
+	Put(T)
+	Poll() T
+	Peek() T
+	Size() int
+	IsEmpty() bool
 }

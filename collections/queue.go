@@ -2,6 +2,8 @@ package collections
 
 import "sync"
 
+var _ Queue[string] = &ArrayQueue[string]{}
+
 // 数组队列，先进先出
 type ArrayQueue[T any] struct {
 	array []T        // 底层切片
@@ -14,7 +16,7 @@ func NewArrayQueue[T any]() *ArrayQueue[T] {
 }
 
 // 入队
-func (q *ArrayQueue[T]) Add(v T) {
+func (q *ArrayQueue[T]) Put(v T) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -26,7 +28,7 @@ func (q *ArrayQueue[T]) Add(v T) {
 }
 
 // 出队
-func (q *ArrayQueue[T]) Remove() any {
+func (q *ArrayQueue[T]) Poll() T {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -58,6 +60,10 @@ func (q *ArrayQueue[T]) Remove() any {
 	// 队中元素数量-1
 	q.size = q.size - 1
 	return v
+}
+
+func (q *ArrayQueue[T]) Peek() T {
+	return q.array[0]
 }
 
 // 栈大小
