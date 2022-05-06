@@ -1,5 +1,10 @@
 package pool
 
+type Pool[T any] interface {
+	Get() (o T)
+	Put(o T)
+}
+
 type pool[T any] struct {
 	noCopy struct{}
 	c      chan T

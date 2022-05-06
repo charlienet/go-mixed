@@ -52,3 +52,15 @@ func BenchmarkPool(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkPoolNew(b *testing.B) {
+	p := pool.NewPoolWithNew(100, func() int {
+		return 100
+	})
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			p.Put(p.Get())
+		}
+	})
+}
