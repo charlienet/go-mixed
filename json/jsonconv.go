@@ -40,6 +40,7 @@ type CamelCase struct {
 
 func (c CamelCase) MarshalJSON() ([]byte, error) {
 	var keyMatchRegex = regexp.MustCompile(`\"(\w+)\":`)
+	
 	marshalled, err := Marshal(c.Value)
 	converted := keyMatchRegex.ReplaceAllFunc(
 		marshalled,
