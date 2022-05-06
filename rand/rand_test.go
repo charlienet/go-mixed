@@ -56,6 +56,27 @@ func TestRange(t *testing.T) {
 	}
 }
 
+func TestGenerator(t *testing.T) {
+	g := rand.NewRandGenerator()
+
+	for i := 0; i < 100; i++ {
+		t.Log(g.Int63())
+	}
+}
+
+func TestMutiGenerator(t *testing.T) {
+	set := make(map[int64]struct{}, 1000)
+
+	for i := 0; i < 1000; i++ {
+		r := rand.NewRandGenerator().Int63()
+		if _, ok := set[r]; ok {
+			t.Fatal("生成的随机数重复")
+		}
+
+		set[r] = struct{}{}
+	}
+}
+
 func BenchmarkParallel(b *testing.B) {
 	rand.Hex.Generate(16)
 
@@ -72,15 +93,46 @@ func BenchmarkNoop(b *testing.B) {
 	}
 }
 
-func BenchmarkRandString(b *testing.B) {
+func BenchmarkHexString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		rand.RandBytes(16)
+	}
+}
 
-	for i := 0; i < 10; i++ {
-		rand.Hex.Generate(10)
+func BenchmarkHexParallel(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			rand.RandBytes(16)
+		}
+	})
+}
+
+func BenchmarkGenerator(b *testing.B) {
+	r := rand.NewRandGenerator()
+	for i := 0; i < b.N; i++ {
+		r.Int63()
+	}
+}
+
+func BenchmarkParallelGenerator(b *testing.B) {
+	r := rand.NewRandGenerator()
+	for i:=0; i<10; i++{
+		go r.Int63()
 	}
 
 	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			r.Int63()
+		}
+	})
+}
+
+func BenchmarkRandString(b *testing.B) {
+	b.Log(rand.Hex.Generate(16))
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rand.Hex.Generate(20)
+		rand.Hex.Generate(16)
 	}
 }
 
