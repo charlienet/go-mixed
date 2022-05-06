@@ -10,5 +10,11 @@ type Map[K constraints.Ordered, V any] interface {
 	Clone() Map[K, V]
 	Clear()
 	Count() int
+	Iter() <-chan *Entry[K, V]
 	ForEach(f func(K, V))
+}
+
+type Entry[K constraints.Ordered, V any] struct {
+	Key   K
+	Value V
 }

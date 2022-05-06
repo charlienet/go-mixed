@@ -3,7 +3,6 @@ package crypto
 import (
 	"crypto/rand"
 	"errors"
-	"fmt"
 
 	s "github.com/tjfoc/gmsm/sm2"
 	x "github.com/tjfoc/gmsm/x509"
@@ -54,8 +53,6 @@ func NewSm2(opts ...option) (*sm2Instance, error) {
 
 func ParseSm2PrivateKey(p []byte, pwd []byte) option {
 	return func(so *sm2Instance) error {
-		fmt.Println(string(p))
-
 		priv, err := x.ReadPrivateKeyFromPem(p, pwd)
 		if err != nil {
 			return err

@@ -49,6 +49,17 @@ func (m *ConcurrnetMap[K, V]) Exist(key K) bool {
 	return mm.Exist(key)
 }
 
+func (m *ConcurrnetMap[K, V]) Iter() <-chan *Entry[K, V] {
+	num := int(m.numOfBuckets)
+	ch := make(chan *Entry[K, V], m.Count())
+	for i := 0; i < num; i++ {
+		c := m.buckets[i].Iter()
+		ch <- <-c
+	}
+
+	return ch
+}
+
 func (m *ConcurrnetMap[K, V]) ForEach(f func(K, V)) {
 	var wg sync.WaitGroup
 

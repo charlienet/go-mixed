@@ -34,6 +34,22 @@ func (m *hashMap[K, V]) Exist(key K) bool {
 	return ok
 }
 
+func (m *hashMap[K, V]) Iter() <-chan *Entry[K, V] {
+	ch := make(chan *Entry[K, V], m.Count())
+	go func() {
+		for k, v := range m.m {
+			ch <- &Entry[K, V]{
+				Key:   k,
+				Value: v,
+			}
+		}
+
+		close(ch)
+	}()
+
+	return ch
+}
+
 func (m *hashMap[K, V]) ForEach(f func(K, V)) {
 	for k, v := range m.m {
 		f(k, v)

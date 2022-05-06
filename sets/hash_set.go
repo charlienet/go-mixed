@@ -25,7 +25,7 @@ func (s hash_set[T]) Contain(value T) bool {
 
 func (s hash_set[T]) Clone() hash_set[T] {
 	set := NewHashSet[T]()
-	set.Add(s.Values()...)
+	set.Add(s.ToSlice()...)
 	return set
 }
 
@@ -38,7 +38,7 @@ func (s hash_set[T]) Iterate(fn func(value T)) {
 // Union creates a new set contain all element of set s and other
 func (s hash_set[T]) Union(other hash_set[T]) hash_set[T] {
 	set := s.Clone()
-	set.Add(other.Values()...)
+	set.Add(other.ToSlice()...)
 	return set
 }
 
@@ -54,7 +54,7 @@ func (s hash_set[T]) Intersection(other hash_set[T]) hash_set[T] {
 	return set
 }
 
-func (s hash_set[T]) Values() []T {
+func (s hash_set[T]) ToSlice() []T {
 	values := make([]T, 0, s.Size())
 	s.Iterate(func(value T) {
 		values = append(values, value)

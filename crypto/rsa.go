@@ -54,6 +54,24 @@ func NewRsa(h Hash, opts ...rsaOption) (*rsaInstance, error) {
 	return o, nil
 }
 
+func ParsePKCS8PrivateKey(p []byte) rsaOption {
+	return func(o *rsaInstance) error {
+		block, _ := pem.Decode(p)
+		if block == nil {
+			return errors.New("failed to decode private key")
+		}
+
+		prk, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return err
+		}
+
+		o.prk = prk.(*rsa.PrivateKey)
+
+		return nil
+	}
+}
+
 func ParsePKCS1PrivateKey(p []byte) rsaOption {
 	return func(o *rsaInstance) error {
 		block, _ := pem.Decode(p)

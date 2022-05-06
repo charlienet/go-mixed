@@ -49,6 +49,13 @@ func (m *rw_map[K, V]) Count() int {
 	return m.m.Count()
 }
 
+func (m *rw_map[K, V]) Iter() <-chan *Entry[K, V] {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return m.m.Iter()
+}
+
 func (m *rw_map[K, V]) ForEach(f func(K, V)) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

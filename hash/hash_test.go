@@ -7,7 +7,18 @@ import (
 	"testing"
 
 	"github.com/charlienet/go-mixed/hash"
+	"github.com/charlienet/go-mixed/rand"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestHashComplie(t *testing.T) {
+	abc, err := hash.New("MD5")
+	if err != nil {
+
+	}
+	b, _ := hex.DecodeString(rand.Hex.Generate(16))
+	assert.False(t, abc.Verify([]byte("source"), b))
+}
 
 func TestEncode(t *testing.T) {
 	t.Log(hash.Sha1([]byte{0x31}).Base64())

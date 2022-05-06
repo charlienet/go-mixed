@@ -64,6 +64,23 @@ func (m *sorted_map[K, V]) Clone() Map[K, V] {
 	return &sorted_map[K, V]{maps: m.maps.Clone(), keys: getKeys(m.maps)}
 }
 
+func (m *sorted_map[K, V]) Iter() <-chan *Entry[K, V] {
+	c := make(chan *Entry[K, V], m.Count())
+	go func() {
+		for _, k := range m.keys {
+			v, _ := m.maps.Get(k)
+
+			c <- &Entry[K, V]{
+				Key:   k,
+				Value: v,
+			}
+		}
+		close(c)
+	}()
+
+	return c
+}
+
 func (m *sorted_map[K, V]) ForEach(f func(K, V)) {
 	m.maps.ForEach(f)
 }
