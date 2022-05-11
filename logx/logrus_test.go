@@ -26,6 +26,9 @@ func TestLogrus(t *testing.T) {
 	l.WithField("abc", "bcd").Info("aaaa")
 	l.WithField("bbb", "bbb").Info("bbbb")
 	l.WithField("ccc", "ccc").Info("cccc")
+
+	l = l.WithField("o", "o")
+	l.WithField("z", "z").Info("abcd")
 }
 
 func TestLevel(t *testing.T) {

@@ -27,11 +27,13 @@ func (l *logrusWrpper) SetLevel(level Level) {
 }
 
 func (l *logrusWrpper) WithField(key string, value any) Logger {
-	return l.WithFields(Fields{key: value})
+	return l.WithFields(Fields{key: value}).(*logrusWrpper)
 }
 
 func (l *logrusWrpper) WithFields(fields Fields) Logger {
-	return &logrusWrpper{
-		Entry: l.Logger.WithFields(logrus.Fields(fields)),
+	l = &logrusWrpper{
+		Entry: l.Entry.WithFields(logrus.Fields(fields)),
 	}
+
+	return l
 }
