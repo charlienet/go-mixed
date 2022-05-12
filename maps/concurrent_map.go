@@ -60,6 +60,33 @@ func (m *ConcurrnetMap[K, V]) Iter() <-chan *Entry[K, V] {
 	return ch
 }
 
+func (m *ConcurrnetMap[K, V]) Keys() []K {
+	keys := make([]K, m.Count())
+	for _, b := range m.buckets {
+		keys = append(keys, b.Keys()...)
+	}
+
+	return keys
+}
+
+func (m *ConcurrnetMap[K, V]) Values() []V {
+	values := make([]V, 0, m.Count())
+	for _, v := range m.buckets {
+		values = append(values, v.Values()...)
+	}
+
+	return values
+}
+
+func (m *ConcurrnetMap[K, V]) ToMap() map[K]V {
+	mm := make(map[K]V, m.Count())
+	for _, v := range m.buckets {
+		mm = Merge(mm, v.ToMap())
+	}
+
+	return mm
+}
+
 func (m *ConcurrnetMap[K, V]) ForEach(f func(K, V)) {
 	var wg sync.WaitGroup
 

@@ -23,12 +23,17 @@ type sorted_map[K constraints.Ordered, V any] struct {
 	maps Map[K, V]
 }
 
-func NewSortedMap[K constraints.Ordered, V any]() *sorted_map[K, V] {
-	return &sorted_map[K, V]{keys: make([]K, 0), maps: NewHashMap[K, V]()}
+func NewSortedMap[K constraints.Ordered, V any](maps ...map[K]V) *sorted_map[K, V] {
+	merged := Merge(maps...)
+	return &sorted_map[K, V]{
+		keys: keys(merged),
+		maps: newHashMap(merged),
+	}
 }
 
 func NewSortedByMap[K constraints.Ordered, V any](m Map[K, V]) *sorted_map[K, V] {
-	return &sorted_map[K, V]{maps: m, keys: getKeys(m)}
+
+	return &sorted_map[K, V]{maps: m, keys: m.Keys()}
 }
 
 func (m *sorted_map[K, V]) Get(key K) (V, bool) {
@@ -61,7 +66,7 @@ func (m *sorted_map[K, V]) Clear() {
 }
 
 func (m *sorted_map[K, V]) Clone() Map[K, V] {
-	return &sorted_map[K, V]{maps: m.maps.Clone(), keys: getKeys(m.maps)}
+	return &sorted_map[K, V]{maps: m.maps.Clone(), keys: m.Keys()}
 }
 
 func (m *sorted_map[K, V]) Iter() <-chan *Entry[K, V] {
@@ -113,6 +118,10 @@ func (s *sorted_map[K, V]) Values() []V {
 	return ret
 }
 
+func (s *sorted_map[K, V]) ToMap() map[K]V {
+	return s.maps.ToMap()
+}
+
 func (m *sorted_map[K, V]) String() string {
 	return fmt.Sprintf("map[%s]", m.Join(" ", func(k K, v V) string {
 		return fmt.Sprintf("%v:%v", k, v)
@@ -142,12 +151,11 @@ func (m *sorted_map[K, V]) Desc() SortedMap[K, V] {
 	}
 }
 
-func getKeys[K constraints.Ordered, V any](m Map[K, V]) []K {
-	keys := make([]K, 0, m.Count())
-
-	m.ForEach(func(k K, v V) {
+func keys[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
 		keys = append(keys, k)
-	})
+	}
 
 	return keys
 }

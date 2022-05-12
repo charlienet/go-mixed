@@ -12,8 +12,8 @@ func NewHashMap[K constraints.Ordered, V any]() *hashMap[K, V] {
 	return &hashMap[K, V]{m: make(map[K]V)}
 }
 
-func newHashMap[K constraints.Ordered, V any](m map[K]V) *hashMap[K, V] {
-	return &hashMap[K, V]{m: m}
+func newHashMap[K constraints.Ordered, V any](maps ...map[K]V) *hashMap[K, V] {
+	return &hashMap[K, V]{m: Merge(maps...)}
 }
 
 func (m *hashMap[K, V]) Set(key K, value V) {
@@ -54,6 +54,33 @@ func (m *hashMap[K, V]) ForEach(f func(K, V)) {
 	for k, v := range m.m {
 		f(k, v)
 	}
+}
+
+func (m *hashMap[K, V]) Keys() []K {
+	keys := make([]K, 0, m.Count())
+	for k := range m.m {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+func (m *hashMap[K, V]) Values() []V {
+	values := make([]V, 0, m.Count())
+	for _, v := range m.m {
+		values = append(values, v)
+	}
+
+	return values
+}
+
+func (m *hashMap[K, V]) ToMap() map[K]V {
+	mm := make(map[K]V, m.Count())
+	for k, v := range m.m {
+		mm[k] = v
+	}
+
+	return mm
 }
 
 func (m *hashMap[K, V]) Clear() {

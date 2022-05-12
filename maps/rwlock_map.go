@@ -13,8 +13,9 @@ type rw_map[K constraints.Ordered, V any] struct {
 	mu sync.RWMutex
 }
 
-func NewRWMap[K constraints.Ordered, V any]() *rw_map[K, V] {
-	return &rw_map[K, V]{}
+func NewRWMap[K constraints.Ordered, V any](maps ...map[K]V) *rw_map[K, V] {
+	merged := Merge(maps...)
+	return &rw_map[K, V]{m: newHashMap(merged)}
 }
 
 func newRWMap[K constraints.Ordered, V any](m Map[K, V]) *rw_map[K, V] {
@@ -39,6 +40,26 @@ func (m *rw_map[K, V]) Delete(key K) {
 	defer m.mu.RUnlock()
 
 	m.m.Delete(key)
+}
+
+func (m *rw_map[K, V]) Keys() []K {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.m.Keys()
+}
+
+func (m *rw_map[K, V]) Values() []V {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return m.m.Values()
+}
+
+func (m *rw_map[K, V]) ToMap() map[K]V {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return m.m.ToMap()
 }
 
 func (m *rw_map[K, V]) Exist(key K) bool {
