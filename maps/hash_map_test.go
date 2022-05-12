@@ -1,0 +1,25 @@
+package maps
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestForEach(t *testing.T) {
+	m := map[string]any{"b": "b", "a": "a", "d": "d", "c": "c"}
+	var hashMap = NewHashMap(map[string]any{"b": "b", "a": "a", "d": "d", "c": "c"})
+
+	assert.True(t, hashMap.Exist("a"))
+	assert.Equal(t, len(m), hashMap.Count())
+
+	hashMap.ForEach(func(s string, a any) {
+		if _, ok := m[s]; !ok {
+			t.Fatal("值不存在")
+		}
+	})
+
+	for k := range m {
+		assert.True(t, hashMap.Exist(k))
+	}
+}

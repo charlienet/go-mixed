@@ -36,8 +36,8 @@ func (m *rw_map[K, V]) Get(key K) (V, bool) {
 }
 
 func (m *rw_map[K, V]) Delete(key K) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	m.m.Delete(key)
 }

@@ -5,6 +5,8 @@ import (
 
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
+
+	xmaps "golang.org/x/exp/maps"
 )
 
 var (
@@ -26,7 +28,7 @@ type sorted_map[K constraints.Ordered, V any] struct {
 func NewSortedMap[K constraints.Ordered, V any](maps ...map[K]V) *sorted_map[K, V] {
 	merged := Merge(maps...)
 	return &sorted_map[K, V]{
-		keys: keys(merged),
+		keys: xmaps.Keys(merged),
 		maps: NewHashMap(merged),
 	}
 }
@@ -115,12 +117,6 @@ func (s *sorted_map[K, V]) ToMap() map[K]V {
 	return s.maps.ToMap()
 }
 
-func (m *sorted_map[K, V]) String() string {
-	return fmt.Sprintf("map[%s]", Join[K, V](m, " ", func(k K, v V) string {
-		return fmt.Sprintf("%v:%v", k, v)
-	}))
-}
-
 func (m *sorted_map[K, V]) Asc() SortedMap[K, V] {
 	keys := m.keys
 	slices.Sort(keys)
@@ -144,11 +140,8 @@ func (m *sorted_map[K, V]) Desc() SortedMap[K, V] {
 	}
 }
 
-func keys[K comparable, V any](m map[K]V) []K {
-	keys := make([]K, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-
-	return keys
+func (m *sorted_map[K, V]) String() string {
+	return fmt.Sprintf("map[%s]", Join[K, V](m, " ", func(k K, v V) string {
+		return fmt.Sprintf("%v:%v", k, v)
+	}))
 }

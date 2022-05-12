@@ -12,12 +12,12 @@ import (
 
 var defaultNumOfBuckets = runtime.GOMAXPROCS(runtime.NumCPU())
 
-type ConcurrnetMap[K constraints.Ordered, V any] struct {
+type concurrnetMap[K constraints.Ordered, V any] struct {
 	buckets      []Map[K, V]
 	numOfBuckets uint64
 }
 
-func NewConcurrentMap[K constraints.Ordered, V any]() *ConcurrnetMap[K, V] {
+func NewConcurrentMap[K constraints.Ordered, V any]() *concurrnetMap[K, V] {
 	num := defaultNumOfBuckets
 
 	buckets := make([]Map[K, V], num)
@@ -25,31 +25,31 @@ func NewConcurrentMap[K constraints.Ordered, V any]() *ConcurrnetMap[K, V] {
 		buckets[i] = NewRWMap[K, V]()
 	}
 
-	return &ConcurrnetMap[K, V]{
+	return &concurrnetMap[K, V]{
 		numOfBuckets: uint64(num),
 		buckets:      buckets,
 	}
 }
 
-func (m *ConcurrnetMap[K, V]) Set(key K, value V) {
+func (m *concurrnetMap[K, V]) Set(key K, value V) {
 	m.getBucket(key).Set(key, value)
 }
 
-func (m *ConcurrnetMap[K, V]) Get(key K) (V, bool) {
+func (m *concurrnetMap[K, V]) Get(key K) (V, bool) {
 	return m.getBucket(key).Get(key)
 }
 
-func (m *ConcurrnetMap[K, V]) Delete(key K) {
+func (m *concurrnetMap[K, V]) Delete(key K) {
 	im := m.getBucket(key)
 	im.Delete(key)
 }
 
-func (m *ConcurrnetMap[K, V]) Exist(key K) bool {
+func (m *concurrnetMap[K, V]) Exist(key K) bool {
 	mm := m.getBucket(key)
 	return mm.Exist(key)
 }
 
-func (m *ConcurrnetMap[K, V]) Iter() <-chan *Entry[K, V] {
+func (m *concurrnetMap[K, V]) Iter() <-chan *Entry[K, V] {
 	num := int(m.numOfBuckets)
 	ch := make(chan *Entry[K, V], m.Count())
 	for i := 0; i < num; i++ {
@@ -60,7 +60,7 @@ func (m *ConcurrnetMap[K, V]) Iter() <-chan *Entry[K, V] {
 	return ch
 }
 
-func (m *ConcurrnetMap[K, V]) Keys() []K {
+func (m *concurrnetMap[K, V]) Keys() []K {
 	keys := make([]K, m.Count())
 	for _, b := range m.buckets {
 		keys = append(keys, b.Keys()...)
@@ -69,7 +69,7 @@ func (m *ConcurrnetMap[K, V]) Keys() []K {
 	return keys
 }
 
-func (m *ConcurrnetMap[K, V]) Values() []V {
+func (m *concurrnetMap[K, V]) Values() []V {
 	values := make([]V, 0, m.Count())
 	for _, v := range m.buckets {
 		values = append(values, v.Values()...)
@@ -78,7 +78,7 @@ func (m *ConcurrnetMap[K, V]) Values() []V {
 	return values
 }
 
-func (m *ConcurrnetMap[K, V]) ToMap() map[K]V {
+func (m *concurrnetMap[K, V]) ToMap() map[K]V {
 	mm := make(map[K]V, m.Count())
 	for _, v := range m.buckets {
 		mm = Merge(mm, v.ToMap())
@@ -87,7 +87,7 @@ func (m *ConcurrnetMap[K, V]) ToMap() map[K]V {
 	return mm
 }
 
-func (m *ConcurrnetMap[K, V]) ForEach(f func(K, V)) {
+func (m *concurrnetMap[K, V]) ForEach(f func(K, V)) {
 	var wg sync.WaitGroup
 
 	num := int(m.numOfBuckets)
@@ -103,7 +103,7 @@ func (m *ConcurrnetMap[K, V]) ForEach(f func(K, V)) {
 	wg.Wait()
 }
 
-func (m *ConcurrnetMap[K, V]) Clone() Map[K, V] {
+func (m *concurrnetMap[K, V]) Clone() Map[K, V] {
 
 	num := int(m.numOfBuckets)
 
@@ -112,19 +112,19 @@ func (m *ConcurrnetMap[K, V]) Clone() Map[K, V] {
 		buckets[i] = m.buckets[i].Clone()
 	}
 
-	return &ConcurrnetMap[K, V]{
+	return &concurrnetMap[K, V]{
 		buckets:      buckets,
 		numOfBuckets: m.numOfBuckets,
 	}
 }
 
-func (m *ConcurrnetMap[K, V]) Clear() {
+func (m *concurrnetMap[K, V]) Clear() {
 	for i := 0; i < int(m.numOfBuckets); i++ {
 		m.buckets[i].Clear()
 	}
 }
 
-func (m *ConcurrnetMap[K, V]) Count() int {
+func (m *concurrnetMap[K, V]) Count() int {
 	var count int
 	for i := 0; i < int(m.numOfBuckets); i++ {
 		count += m.buckets[i].Count()
@@ -133,7 +133,7 @@ func (m *ConcurrnetMap[K, V]) Count() int {
 	return count
 }
 
-func (m *ConcurrnetMap[K, V]) getBucket(k K) Map[K, V] {
+func (m *concurrnetMap[K, V]) getBucket(k K) Map[K, V] {
 	id := getTag(k) % m.numOfBuckets
 	return m.buckets[id]
 }

@@ -9,7 +9,12 @@ type hashMap[K constraints.Ordered, V any] struct {
 }
 
 func NewHashMap[K constraints.Ordered, V any](maps ...map[K]V) *hashMap[K, V] {
-	return &hashMap[K, V]{m: make(map[K]V)}
+	m := make(map[K]V)
+	if len(maps) > 0 {
+		m = Merge(maps...)
+	}
+
+	return &hashMap[K, V]{m: m}
 }
 
 // synchronized
