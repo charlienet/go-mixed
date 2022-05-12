@@ -1,13 +1,12 @@
 package maps
 
 import (
-	"sync"
-
 	"github.com/charlienet/go-mixed/locker"
 )
 
 type options struct {
-	mu sync.Locker
+	hasLocker bool
+	mu        locker.RWLocker
 }
 
 func acquireDefaultOptions() *options {
