@@ -2,7 +2,6 @@ package maps
 
 import (
 	"fmt"
-	"strings"
 
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
@@ -32,7 +31,6 @@ func NewSortedMap[K constraints.Ordered, V any](maps ...map[K]V) *sorted_map[K, 
 }
 
 func NewSortedByMap[K constraints.Ordered, V any](m Map[K, V]) *sorted_map[K, V] {
-
 	return &sorted_map[K, V]{maps: m, keys: m.Keys()}
 }
 
@@ -94,16 +92,6 @@ func (m *sorted_map[K, V]) Exist(key K) bool {
 	return m.Exist(key)
 }
 
-func (m *sorted_map[K, V]) Join(sep string, f func(k K, v V) string) string {
-	slice := make([]string, 0, m.maps.Count())
-	for _, k := range m.keys {
-		v, _ := m.maps.Get(k)
-		slice = append(slice, f(k, v))
-	}
-
-	return strings.Join(slice, sep)
-}
-
 func (m *sorted_map[K, V]) Keys() []K {
 	return m.keys
 }
@@ -123,7 +111,7 @@ func (s *sorted_map[K, V]) ToMap() map[K]V {
 }
 
 func (m *sorted_map[K, V]) String() string {
-	return fmt.Sprintf("map[%s]", m.Join(" ", func(k K, v V) string {
+	return fmt.Sprintf("map[%s]", Join[K, V](m, " ", func(k K, v V) string {
 		return fmt.Sprintf("%v:%v", k, v)
 	}))
 }

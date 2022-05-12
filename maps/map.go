@@ -1,6 +1,10 @@
 package maps
 
-import "golang.org/x/exp/constraints"
+import (
+	"strings"
+
+	"golang.org/x/exp/constraints"
+)
 
 type Map[K constraints.Ordered, V any] interface {
 	Set(key K, value V)           // 设置值
@@ -31,4 +35,15 @@ func Merge[K comparable, V any](mm ...map[K]V) map[K]V {
 	}
 
 	return ret
+}
+
+// 按照键值生成字符串
+func Join[K constraints.Ordered, V any](m Map[K, V], sep string, f func(k K, v V) string) string {
+	slice := make([]string, 0, m.Count())
+	for _, k := range m.Keys() {
+		v, _ := m.Get(k)
+		slice = append(slice, f(k, v))
+	}
+
+	return strings.Join(slice, sep)
 }
