@@ -8,12 +8,13 @@ type hashMap[K constraints.Ordered, V any] struct {
 	m map[K]V
 }
 
-func NewHashMap[K constraints.Ordered, V any]() *hashMap[K, V] {
+func NewHashMap[K constraints.Ordered, V any](maps ...map[K]V) *hashMap[K, V] {
 	return &hashMap[K, V]{m: make(map[K]V)}
 }
 
-func newHashMap[K constraints.Ordered, V any](maps ...map[K]V) *hashMap[K, V] {
-	return &hashMap[K, V]{m: Merge(maps...)}
+// synchronized
+func (m *hashMap[K, V]) Synchronized() *hashMap[K, V] {
+	return m
 }
 
 func (m *hashMap[K, V]) Set(key K, value V) {
@@ -92,10 +93,5 @@ func (m *hashMap[K, V]) Count() int {
 }
 
 func (m *hashMap[K, V]) Clone() Map[K, V] {
-	r := make(map[K]V, len(m.m))
-	for k, v := range m.m {
-		r[k] = v
-	}
-
-	return newHashMap(r)
+	return NewHashMap(m.ToMap())
 }

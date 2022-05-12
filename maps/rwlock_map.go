@@ -15,7 +15,7 @@ type rw_map[K constraints.Ordered, V any] struct {
 
 func NewRWMap[K constraints.Ordered, V any](maps ...map[K]V) *rw_map[K, V] {
 	merged := Merge(maps...)
-	return &rw_map[K, V]{m: newHashMap(merged)}
+	return &rw_map[K, V]{m: NewHashMap(merged)}
 }
 
 func newRWMap[K constraints.Ordered, V any](m Map[K, V]) *rw_map[K, V] {

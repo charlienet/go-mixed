@@ -13,6 +13,7 @@ var (
 )
 
 type SortedMap[K constraints.Ordered, V any] interface {
+	Map[K, V]
 	Asc() SortedMap[K, V]
 	Desc() SortedMap[K, V]
 }
@@ -26,7 +27,7 @@ func NewSortedMap[K constraints.Ordered, V any](maps ...map[K]V) *sorted_map[K, 
 	merged := Merge(maps...)
 	return &sorted_map[K, V]{
 		keys: keys(merged),
-		maps: newHashMap(merged),
+		maps: NewHashMap(merged),
 	}
 }
 
@@ -35,11 +36,11 @@ func NewSortedByMap[K constraints.Ordered, V any](m Map[K, V]) *sorted_map[K, V]
 }
 
 func (m *sorted_map[K, V]) Get(key K) (V, bool) {
-	return m.Get(key)
+	return m.maps.Get(key)
 }
 
 func (m *sorted_map[K, V]) Set(key K, value V) {
-	m.Set(key, value)
+	m.maps.Set(key, value)
 	m.keys = append(m.keys, key)
 }
 
@@ -85,11 +86,15 @@ func (m *sorted_map[K, V]) Iter() <-chan *Entry[K, V] {
 }
 
 func (m *sorted_map[K, V]) ForEach(f func(K, V)) {
-	m.maps.ForEach(f)
+	for _, k := range m.keys {
+		if v, ok := m.Get(k); ok {
+			f(k, v)
+		}
+	}
 }
 
 func (m *sorted_map[K, V]) Exist(key K) bool {
-	return m.Exist(key)
+	return m.maps.Exist(key)
 }
 
 func (m *sorted_map[K, V]) Keys() []K {
