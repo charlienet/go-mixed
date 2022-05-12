@@ -2,20 +2,24 @@ package locker
 
 import "sync"
 
-var locks = make(map[string]sync.Locker)
-
-func Lock(name string) {
-	if l, ok := locks[name]; ok {
-		l.Lock()
-	}
-
-	new := &sync.Mutex{}
-	locks[name] = new
-	new.Lock()
+type Locker interface {
+	Lock()
+	Unlock()
+	TryLock() bool
 }
 
-func Unlock(name string) {
-	if l, ok := locks[name]; ok {
-		l.Unlock()
-	}
+type RWLocker interface {
+	Locker
+	RLock()
+	RUnlock()
+	TryRLock() bool
 }
+
+type locker struct {
+	*sync.Mutex
+}
+
+func NewLocker() *locker {
+	return &locker{Mutex: &sync.Mutex{}}
+}
+
