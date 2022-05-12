@@ -1,11 +1,22 @@
 package sets
 
-type hash_set[T comparable] map[T]struct{}
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"strings"
 
-func NewHashSet[T comparable](values ...T) hash_set[T] {
+	"golang.org/x/exp/constraints"
+)
+
+var _ Set[string] = &hash_set[string]{}
+
+type hash_set[T constraints.Ordered] map[T]struct{}
+
+func NewHashSet[T constraints.Ordered](values ...T) *hash_set[T] {
 	set := make(hash_set[T], len(values))
 	set.Add(values...)
-	return set
+	return &set
 }
 
 func (s hash_set[T]) Add(values ...T) {
@@ -18,12 +29,49 @@ func (s hash_set[T]) Remove(v T) {
 	delete(s, v)
 }
 
-func (s hash_set[T]) Contain(value T) bool {
+func (s hash_set[T]) Contains(value T) bool {
 	_, ok := s[value]
 	return ok
 }
 
-func (s hash_set[T]) Clone() hash_set[T] {
+func (s hash_set[T]) ContainsAny(values ...T) bool {
+	for _, v := range values {
+		if _, ok := s[v]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s hash_set[T]) ContainsAll(values ...T) bool {
+	for _, v := range values {
+		if _, ok := s[v]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s hash_set[T]) Asc() Set[T] {
+	return s.copyToSorted().Asc()
+}
+
+func (s hash_set[T]) Desc() Set[T] {
+	return s.copyToSorted().Desc()
+}
+
+func (s hash_set[T]) copyToSorted() Set[T] {
+	orderd := NewSortedSet[T]()
+	for k := range s {
+		orderd.Add(k)
+	}
+
+	return orderd
+}
+
+func (s *hash_set[T]) Clone() *hash_set[T] {
 	set := NewHashSet[T]()
 	set.Add(s.ToSlice()...)
 	return set
@@ -33,25 +81,6 @@ func (s hash_set[T]) Iterate(fn func(value T)) {
 	for v := range s {
 		fn(v)
 	}
-}
-
-// Union creates a new set contain all element of set s and other
-func (s hash_set[T]) Union(other hash_set[T]) hash_set[T] {
-	set := s.Clone()
-	set.Add(other.ToSlice()...)
-	return set
-}
-
-// Intersection creates a new set whose element both be contained in set s and other
-func (s hash_set[T]) Intersection(other hash_set[T]) hash_set[T] {
-	set := NewHashSet[T]()
-	s.Iterate(func(value T) {
-		if other.Contain(value) {
-			set.Add(value)
-		}
-	})
-
-	return set
 }
 
 func (s hash_set[T]) ToSlice() []T {
@@ -69,4 +98,47 @@ func (s hash_set[T]) IsEmpty() bool {
 
 func (s hash_set[T]) Size() int {
 	return len(s)
+}
+
+func (s hash_set[T]) MarshalJSON() ([]byte, error) {
+	items := make([]string, 0, s.Size())
+
+	for ele := range s {
+		b, err := json.Marshal(ele)
+		if err != nil {
+			return nil, err
+		}
+
+		items = append(items, string(b))
+	}
+
+	return []byte(fmt.Sprintf("[%s]", strings.Join(items, ", "))), nil
+}
+
+func (s hash_set[T]) UnmarshalJSON(b []byte) error {
+	var i []any
+
+	d := json.NewDecoder(bytes.NewReader(b))
+	d.UseNumber()
+	err := d.Decode(&i)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range i {
+		if t, ok := v.(T); ok {
+			s.Add(t)
+		}
+	}
+
+	return nil
+}
+
+func (s hash_set[T]) String() string {
+	l := make([]string, 0, len(s))
+	for k := range s {
+		l = append(l, fmt.Sprint(k))
+	}
+
+	return fmt.Sprintf("{%s}", strings.Join(l, ", "))
 }
