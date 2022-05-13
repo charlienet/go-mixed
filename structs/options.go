@@ -41,9 +41,7 @@ func DeepCopy() optionFunc {
 }
 
 func SkipField(field string) optionFunc {
-	return func(o *option) {
-		o.SkipFields = append(o.SkipFields, field)
-	}
+	return SkipFields([]string{field})
 }
 
 func SkipFields(fields []string) optionFunc {

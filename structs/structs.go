@@ -53,6 +53,17 @@ func (s *Struct) Values() []any {
 	return values
 }
 
+func (s *Struct) IsZero() bool {
+	for _, fi := range s.fields {
+		source := s.value.FieldByName(fi.name)
+		if !source.IsZero() {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (s *Struct) ToMap() map[string]any {
 	m := make(map[string]any, len(s.fields))
 	for _, fi := range s.fields {
@@ -110,6 +121,16 @@ func (s *Struct) getByName(name string) (field, bool) {
 
 func Map2Struct(o map[string]any, dst any) {
 
+}
+
+func IsZero(o any) bool {
+	v := reflect.ValueOf(o)
+	if v.IsZero() {
+		return true
+	}
+
+	s := New(o)
+	return s.IsZero()
 }
 
 func Struct2Map(o any, opts ...optionFunc) map[string]any {
