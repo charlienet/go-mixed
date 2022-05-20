@@ -40,21 +40,12 @@ func (q *ArrayQueue[T]) Poll() T {
 	// 队列最前面元素
 	v := q.array[0]
 
-	/*    直接原位移动，但缩容后继的空间不会被释放
-	      for i := 1; i < queue.size; i++ {
-	          // 从第一位开始进行数据移动
-	          queue.array[i-1] = queue.array[i]
-	      }
-	      // 原数组缩容
-	      queue.array = queue.array[0 : queue.size-1]
-	*/
-
 	// 创建新的数组，移动次数过多
 	newArray := make([]T, q.size-1)
 	for i := 1; i < q.size; i++ {
-		// 从老数组的第一位开始进行数据移动
-		newArray[i-1] = q.array[i]
+		copy(newArray, q.array[1:])
 	}
+
 	q.array = newArray
 
 	// 队中元素数量-1

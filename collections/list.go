@@ -1,5 +1,6 @@
 package collections
 
+// 列表
 type List[T any] interface {
 	Add(T)
 	Delete(T)
@@ -7,6 +8,7 @@ type List[T any] interface {
 	ToSlice() []T
 }
 
+// 队列
 type Queue[T any] interface {
 	Put(T)
 	Poll() T

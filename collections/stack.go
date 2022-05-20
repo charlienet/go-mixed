@@ -15,6 +15,7 @@ type ArrayStack[T any] struct {
 	lock  sync.Mutex // 为了并发安全使用的锁
 }
 
+// 初始化堆栈
 func NewArrayStack[T any]() *ArrayStack[T] {
 	return &ArrayStack[T]{}
 }
