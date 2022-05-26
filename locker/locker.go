@@ -15,11 +15,6 @@ type RWLocker interface {
 	TryRLock() bool
 }
 
-type locker struct {
-	*sync.Mutex
+func NewLocker() *sync.Mutex {
+	return &sync.Mutex{}
 }
-
-func NewLocker() *locker {
-	return &locker{Mutex: &sync.Mutex{}}
-}
-

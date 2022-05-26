@@ -2,12 +2,8 @@ package locker
 
 import "sync"
 
-var _ RWLocker = &rwLocker{}
+var _ RWLocker = &sync.RWMutex{}
 
-type rwLocker struct {
-	*sync.RWMutex
-}
-
-func NewRWLocker() *rwLocker {
-	return &rwLocker{RWMutex: &sync.RWMutex{}}
+func NewRWLocker() *sync.RWMutex {
+	return &sync.RWMutex{}
 }

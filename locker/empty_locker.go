@@ -1,9 +1,6 @@
 package locker
 
-// 空锁
-
-var _ Locker = &emptyLocker{}
-var _ RWLocker = &emptyLocker{}
+var EmptyLocker = &emptyLocker{}
 
 type emptyLocker struct{}
 
