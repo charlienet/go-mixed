@@ -3,8 +3,9 @@ package bytesconv
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"strings"
 )
+
+const hextable = "0123456789ABCDEF"
 
 type BytesResult []byte
 
@@ -13,7 +14,15 @@ func (r BytesResult) Hex() string {
 }
 
 func (r BytesResult) UppercaseHex() string {
-	return strings.ToUpper(hex.EncodeToString(r))
+	dst := make([]byte, hex.EncodedLen(len(r)))
+	j := 0
+	for _, v := range r {
+		dst[j] = hextable[v>>4]
+		dst[j+1] = hextable[v&0x0f]
+		j += 2
+	}
+
+	return BytesToString(dst)
 }
 
 func (r BytesResult) Base64() string {
