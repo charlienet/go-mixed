@@ -10,5 +10,5 @@ type options struct {
 }
 
 func acquireDefaultOptions() *options {
-	return &options{mu: locker.NewEmptyLocker()}
+	return &options{mu: locker.EmptyLocker}
 }

@@ -17,7 +17,7 @@ type concurrnetMap[K constraints.Ordered, V any] struct {
 	numOfBuckets uint64
 }
 
-func NewConcurrentMap[K constraints.Ordered, V any]() *concurrnetMap[K, V] {
+func NewConcurrentMap[K constraints.Ordered, V any](maps ...map[K]V) *concurrnetMap[K, V] {
 	num := defaultNumOfBuckets
 
 	buckets := make([]Map[K, V], num)
@@ -25,10 +25,18 @@ func NewConcurrentMap[K constraints.Ordered, V any]() *concurrnetMap[K, V] {
 		buckets[i] = NewRWMap[K, V]()
 	}
 
-	return &concurrnetMap[K, V]{
+	m := &concurrnetMap[K, V]{
 		numOfBuckets: uint64(num),
 		buckets:      buckets,
 	}
+
+	for k := range maps {
+		for k, v := range maps[k] {
+			m.Set(k, v)
+		}
+	}
+
+	return m
 }
 
 func (m *concurrnetMap[K, V]) Set(key K, value V) {
@@ -87,7 +95,7 @@ func (m *concurrnetMap[K, V]) ToMap() map[K]V {
 	return mm
 }
 
-func (m *concurrnetMap[K, V]) ForEach(f func(K, V)) {
+func (m *concurrnetMap[K, V]) ForEach(f func(K, V) bool) {
 	var wg sync.WaitGroup
 
 	num := int(m.numOfBuckets)

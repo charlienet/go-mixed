@@ -77,11 +77,13 @@ func (m *rw_map[K, V]) Iter() <-chan *Entry[K, V] {
 	return m.m.Iter()
 }
 
-func (m *rw_map[K, V]) ForEach(f func(K, V)) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+func (m *rw_map[K, V]) ForEach(f func(K, V) bool) {
 
-	m.m.ForEach(f)
+	m.mu.RLock()
+	cloned := m.m.Clone()
+	m.mu.RUnlock()
+
+	cloned.ForEach(f)
 }
 
 func (m *rw_map[K, V]) Clone() Map[K, V] {

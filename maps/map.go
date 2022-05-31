@@ -17,8 +17,8 @@ type Map[K constraints.Ordered, V any] interface {
 	Clone() Map[K, V]             // 复制
 	Clear()                       // 清空
 	Count() int                   // 数量
-	Iter() <-chan *Entry[K, V]
-	ForEach(f func(K, V))
+	Iter() <-chan *Entry[K, V]    // 迭代器
+	ForEach(f func(K, V) bool)    // ForEach
 }
 
 type Entry[K constraints.Ordered, V any] struct {
@@ -41,8 +41,9 @@ func Merge[K comparable, V any](mm ...map[K]V) map[K]V {
 func Join[K constraints.Ordered, V any](m Map[K, V], sep string, f func(k K, v V) string) string {
 	slice := make([]string, 0, m.Count())
 
-	m.ForEach(func(k K, v V) {
+	m.ForEach(func(k K, v V) bool {
 		slice = append(slice, f(k, v))
+		return false
 	})
 
 	return strings.Join(slice, sep)

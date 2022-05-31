@@ -74,11 +74,10 @@ func (m *hashMap[K, V]) Iter() <-chan *Entry[K, V] {
 	return ch
 }
 
-func (m *hashMap[K, V]) ForEach(f func(K, V)) {
-	m.opt.mu.RLock()
-	defer m.opt.mu.RUnlock()
+func (m *hashMap[K, V]) ForEach(f func(K, V) bool ) {
+	cloned := m.ToMap()
 
-	for k, v := range m.m {
+	for k, v := range cloned {
 		f(k, v)
 	}
 }

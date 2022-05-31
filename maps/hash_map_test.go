@@ -13,10 +13,12 @@ func TestForEach(t *testing.T) {
 	assert.True(t, hashMap.Exist("a"))
 	assert.Equal(t, len(m), hashMap.Count())
 
-	hashMap.ForEach(func(s string, a any) {
+	hashMap.ForEach(func(s string, a any) bool {
 		if _, ok := m[s]; !ok {
 			t.Fatal("值不存在")
 		}
+
+		return false
 	})
 
 	for k := range m {
