@@ -3,6 +3,7 @@ package stopwatch_test
 import (
 	"testing"
 	"time"
+	_ "unsafe"
 
 	"github.com/charlienet/go-mixed/stopwatch"
 )
@@ -27,4 +28,17 @@ func TestWatch(t *testing.T) {
 	watch.Reset()
 
 	watch.Restart()
+}
+
+func TestStop(t *testing.T) {
+	watch := stopwatch.StartNew()
+	time.Sleep(time.Second)
+
+	watch.Stop()
+	time.Sleep(time.Second)
+	watch.Start()
+
+	time.Sleep(time.Second)
+
+	t.Log(watch.Elapsed())
 }
