@@ -1,6 +1,7 @@
 package stopwatch
 
 import (
+	"sync/atomic"
 	"time"
 
 	_ "unsafe"
@@ -10,6 +11,7 @@ type watch struct {
 	startTime int64
 	elapsed   int64
 	isRunning bool
+	count     int32
 }
 
 func StartNew() *watch {
@@ -21,7 +23,7 @@ func StartNew() *watch {
 
 func (w *watch) Start() {
 	if !w.isRunning {
-		w.startTime = runtimeNano()
+		w.startTime = w.RuntimeNano()
 		w.isRunning = true
 	}
 }
@@ -29,22 +31,20 @@ func (w *watch) Start() {
 // 将运行时间重置为零，并开始测量运行时间。
 func (w *watch) Restart() {
 	w.elapsed = 0
-	w.startTime = runtimeNano()
+	w.startTime = w.RuntimeNano()
 	w.isRunning = true
 }
 
 // 停止时间间隔测量并将经过的时间重置为零。
 func (w *watch) Reset() {
 	w.elapsed = 0
-	w.startTime = runtimeNano()
+	w.startTime = w.RuntimeNano()
 	w.isRunning = false
 }
 
 func (w *watch) Stop() {
 	if w.isRunning {
-		n := runtimeNano()
-		num := n - w.startTime
-		w.elapsed += num
+		w.elapsed += w.RuntimeNano() - w.startTime
 		w.isRunning = false
 
 		if w.elapsed < 0 {
@@ -70,13 +70,17 @@ func (w *watch) ElapsedMicroseconds() int64 {
 }
 
 func (w *watch) ElapsedNanoseconds() int64 {
-	now := runtimeNano()
 	num := w.elapsed
 	if w.isRunning {
-		num += now - w.startTime
+		num += w.RuntimeNano() - w.startTime
 	}
 
 	return num
+}
+
+func (w *watch) RuntimeNano() int64 {
+	atomic.AddInt32(&w.count, 1)
+	return runtimeNano()
 }
 
 //go:linkname runtimeNano runtime.nanotime

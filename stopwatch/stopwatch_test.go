@@ -42,3 +42,13 @@ func TestStop(t *testing.T) {
 
 	t.Log(watch.Elapsed())
 }
+
+func BenchmarkNanotime(b *testing.B) {
+	b.RunParallel(func(p *testing.PB) {
+		watch := stopwatch.StartNew()
+
+		for p.Next() {
+			watch.ElapsedNanoseconds()
+		}
+	})
+}
