@@ -11,6 +11,10 @@ func NewSpinLocker() *spinLock {
 	return new(spinLock)
 }
 
+func (sl *spinLock) TryLock() bool {
+	return atomic.CompareAndSwapUint32((*uint32)(sl), 0, 1)
+}
+
 func (sl *spinLock) Lock() {
 	for !atomic.CompareAndSwapUint32((*uint32)(sl), 0, 1) {
 		runtime.Gosched()
