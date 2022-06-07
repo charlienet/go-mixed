@@ -2,33 +2,26 @@ package rand_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
-	"time"
-
-	mrnd "math/rand"
 
 	"github.com/charlienet/go-mixed/rand"
+	"github.com/stretchr/testify/assert"
 )
+
+var generators = []rand.RandGenerator{
+	rand.NewFastRandGenerator(),
+	rand.NewRandGenerator(),
+	rand.NewSecureRandGenerator(),
+}
 
 func TestRandString(t *testing.T) {
 	t.Log(rand.AllChars.Generate(20))
-
-	// b, err := rand.RandBytes(32)
-	// t.Log(err)
-	// t.Log(hex.EncodeToString(b))
 }
 
 func TestRandHex(t *testing.T) {
 	h := rand.Hex.Generate(8)
 	t.Log(h)
-}
-
-func TestRandMax(t *testing.T) {
-	mrnd.Seed(time.Now().UnixNano())
-}
-
-func TestCryptRand(t *testing.T) {
-	t.Log(rand.CryptoIntn(56545))
 }
 
 func TestGenericsInterger(t *testing.T) {
@@ -56,6 +49,29 @@ func TestRange(t *testing.T) {
 	}
 }
 
+func TestFastrand(t *testing.T) {
+	t.Log(int(^uint(0) >> 1))
+
+	for _, g := range generators {
+		var max32 int32 = 1000
+		for i := 0; i < 100000; i++ {
+			assert.GreaterOrEqual(t, max32, g.Int31n(max32))
+		}
+
+		var max64 int64 = 1000
+		for i := 0; i < 100000; i++ {
+			assert.GreaterOrEqual(t, max64, g.Int63n(max64))
+		}
+
+		var max int = 1000
+		for i := 0; i < 100000; i++ {
+			assert.GreaterOrEqual(t, max, g.Intn(max))
+		}
+
+		t.Logf("generator:%T pass", g)
+	}
+}
+
 func TestGenerator(t *testing.T) {
 	g := rand.NewRandGenerator()
 
@@ -74,6 +90,31 @@ func TestMutiGenerator(t *testing.T) {
 		}
 
 		set[r] = struct{}{}
+	}
+}
+
+func BenchmarkGenerator(b *testing.B) {
+	for _, g := range generators {
+		b.Run(fmt.Sprintf("%T", g), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				g.Int31()
+			}
+		})
+	}
+}
+
+func BenchmarkParallelGenerator(b *testing.B) {
+	for _, r := range generators {
+		b.Run(fmt.Sprintf("%T", r), func(b *testing.B) {
+			b.ResetTimer()
+
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					r.Int31()
+				}
+			})
+		})
+
 	}
 }
 
@@ -103,27 +144,6 @@ func BenchmarkHexParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			rand.RandBytes(16)
-		}
-	})
-}
-
-func BenchmarkGenerator(b *testing.B) {
-	r := rand.NewRandGenerator()
-	for i := 0; i < b.N; i++ {
-		r.Int63()
-	}
-}
-
-func BenchmarkParallelGenerator(b *testing.B) {
-	r := rand.NewRandGenerator()
-	for i:=0; i<10; i++{
-		go r.Int63()
-	}
-
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			r.Int63()
 		}
 	})
 }
@@ -193,11 +213,4 @@ func BenchmarkRand(b *testing.B) {
 			rand.Intn(100)
 		}
 	})
-
-	b.Run("crypto/rand", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			rand.CryptoIntn(100)
-		}
-	})
-
 }

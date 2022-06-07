@@ -3,8 +3,7 @@ package rand
 import (
 	"crypto/rand"
 	"io"
-
-	"math/big"
+	_ "unsafe"
 
 	"github.com/charlienet/go-mixed/bytesconv"
 )
@@ -20,7 +19,7 @@ const (
 	_         = allChars + "/+"
 )
 
-var rng = NewRandGenerator()
+var rng = NewFastRandGenerator() // NewRandGenerator()
 
 type charScope struct {
 	bytes  []byte
@@ -82,7 +81,11 @@ func (scope *charScope) Generate(length int) string {
 }
 
 type scopeConstraint interface {
-	~int | ~int32 | ~int64
+	~int | ~int32 | ~int64 | ~uint32
+}
+
+func Int[T scopeConstraint]() T {
+	return T(rng.Int31())
 }
 
 // 生成区间 n >= 0, n < max
@@ -95,18 +98,6 @@ func Intn[T scopeConstraint](max T) T {
 func IntRange[T scopeConstraint](min, max T) T {
 	n := Intn(max - min)
 	return T(n + min)
-}
-
-func CryptoRange[T scopeConstraint](min, max T) T {
-	n := CryptoIntn(max - min)
-	return min + n
-}
-
-func CryptoIntn[T ~int | ~int32 | ~int64](max T) T {
-	b := big.NewInt(int64(max))
-	n, _ := rand.Int(rand.Reader, b)
-
-	return T(n.Int64())
 }
 
 func RandBytes(len int) ([]byte, error) {
