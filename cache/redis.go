@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,8 +12,10 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+const redisEmptyObject = "redis object not exist"
+
 type RedisConfig struct {
-	Perfix string // key perfix
+	Prefix string // key perfix
 	Addrs  []string
 
 	// Database to be selected after connecting to the server.
@@ -33,10 +36,10 @@ type RedisConfig struct {
 type redisClient struct {
 	client     redis.UniversalClient
 	emptyStamp string // 空对象标识，每个实例隔离
-	perfix     string // 缓存键前缀
+	prefix     string // 缓存键前缀
 }
 
-func NewRedis(c *RedisConfig) *redisClient {
+func NewRedis(c RedisConfig) *redisClient {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs:    c.Addrs,
 		DB:       c.DB,
@@ -46,35 +49,48 @@ func NewRedis(c *RedisConfig) *redisClient {
 
 	return &redisClient{
 		emptyStamp: fmt.Sprintf("redis-empty-%d-%s", time.Now().Unix(), rand.Hex.Generate(6)),
-		perfix:     c.Perfix,
+		prefix:     c.Prefix,
 		client:     client,
 	}
 }
 
 func (c *redisClient) Get(key string, out any) error {
-	cmd := c.client.Get(context.Background(), key)
-	str, err := cmd.Result()
+	val, err := c.client.Get(context.Background(), c.getKey(key)).Result()
+	if errors.Is(err, redis.Nil) {
+		return ErrNotFound
+	}
+
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(bytesconv.StringToBytes(str), out)
-	return err
+	// redis 保存键为空值时返回键不存在错误
+	if val == redisEmptyObject {
+		return ErrNotFound
+	}
+
+	return json.Unmarshal(bytesconv.StringToBytes(val), out)
 }
 
-func (c *redisClient) Set(key string, value any, expiration time.Duration) {
+func (c *redisClient) Set(key string, value any, expiration time.Duration) error {
 	j, _ := json.Marshal(value)
-	c.client.Set(context.Background(), key, j, expiration)
+	return c.client.Set(context.Background(), c.getKey(key), j, expiration).Err()
 }
 
 func (c *redisClient) Exist(key string) (bool, error) {
-	return false, nil
+	val, err := c.client.Exists(context.Background(), c.getKey(key)).Result()
+	return val > 0, err
 }
 
-func (c *redisClient) Delete(key string) error {
-	cmd := c.client.Del(context.Background(), key)
-	if cmd.Err() != nil {
-		return cmd.Err()
+func (c *redisClient) Delete(key ...string) error {
+	keys := make([]string, 0, len(key))
+	for _, k := range key {
+		keys = append(keys, c.getKey(k))
+	}
+
+	_ , err := c.client.Del(context.Background(), keys...).Result()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -83,4 +99,12 @@ func (c *redisClient) Delete(key string) error {
 func (c *redisClient) Ping() error {
 	_, err := c.client.Ping(context.Background()).Result()
 	return err
+}
+
+func (c *redisClient) getKey(key string) string {
+	if c.prefix != "" {
+		return c.prefix + ":" + key
+	}
+
+	return key
 }

@@ -3,6 +3,7 @@ package rand_test
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/charlienet/go-mixed/rand"
@@ -51,6 +52,7 @@ func TestRange(t *testing.T) {
 
 func TestFastrand(t *testing.T) {
 	t.Log(int(^uint(0) >> 1))
+	t.Log(math.MaxInt)
 
 	for _, g := range generators {
 		var max32 int32 = 1000

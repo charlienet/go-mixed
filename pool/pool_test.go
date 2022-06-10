@@ -33,6 +33,21 @@ func TestPoolSize(t *testing.T) {
 	}
 }
 
+func TestBytesPool(t *testing.T) {
+	var n = 0
+	p := pool.NewPoolWithNew(100, func() []byte {
+		t.Log("new")
+		n++
+		return make([]byte, 100, 100)
+	})
+
+	for i := 0; i < 1000; i++ {
+		go p.Put(p.Get())
+	}
+
+	t.Log("new count:", n)
+}
+
 func TestPut(t *testing.T) {
 	p := pool.NewPool[PoolObject](10)
 	for i := 0; i < 15; i++ {
@@ -63,4 +78,8 @@ func BenchmarkPoolNew(b *testing.B) {
 			p.Put(p.Get())
 		}
 	})
+}
+
+func TestNewFunc(t *testing.T) {
+
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/charlienet/go-mixed/bytesconv"
 	"github.com/coocood/freecache"
 )
 
@@ -37,10 +38,13 @@ func (c *freeCache) Set(key string, value []byte, d time.Duration) error {
 	return c.cache.Set([]byte(key), value, s)
 }
 
-func (c *freeCache) Delete(key string) error {
-	affected := c.cache.Del([]byte(key))
-	if !affected {
-		return errors.New("不存在")
+func (c *freeCache) Delete(keys ...string) error {
+	for _, k := range keys {
+		affected := c.cache.Del(bytesconv.StringToBytes(k))
+
+		if !affected {
+			return errors.New("不存在")
+		}
 	}
 
 	return nil
