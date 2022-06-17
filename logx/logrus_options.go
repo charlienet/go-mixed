@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/charlienet/go-mixed/fs"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -68,9 +69,10 @@ func WithOutput(options LogrusOutputOptions) logrusOption {
 	return func(l *logrus.Logger) {
 		var writer io.Writer
 		switch {
-		case options.Output == File, len(options.FileName) > 0:
+		case options.Output == File && len(options.FileName) > 0:
+			// 设置输出为文件，并且已经设置文件名
 			writer = createFileWriter(options)
-		case options.Output == Both:
+		case options.Output == Both && len(options.FileName) > 0:
 			writer = io.MultiWriter(os.Stdout, createFileWriter(options))
 		default:
 			writer = os.Stdout
@@ -92,7 +94,7 @@ func createFileWriter(options LogrusOutputOptions) io.Writer {
 		}
 	}
 
-	f, err := os.OpenFile(options.FileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	f, err := fs.OpenOrNew(options.FileName)
 	if err != nil {
 		log.Panic(err)
 	}

@@ -8,7 +8,7 @@ import (
 	"github.com/json-iterator/go/extra"
 )
 
-func init() {
+func RegisterFuzzyDecoders() {
 	extra.RegisterFuzzyDecoders()
 }
 
