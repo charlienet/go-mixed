@@ -3,7 +3,14 @@
 
 package json
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	jsoniter "github.com/json-iterator/go"
+	"github.com/json-iterator/go/extra"
+)
+
+func init() {
+	extra.RegisterFuzzyDecoders()
+}
 
 var (
 	json          = jsoniter.ConfigCompatibleWithStandardLibrary
