@@ -13,9 +13,12 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/charlienet/go-mixed/bytesconv"
+	"github.com/charlienet/go-mixed/crypto"
 	"github.com/spaolacci/murmur3"
 	"github.com/tjfoc/gmsm/sm3"
 )
+
+var _ crypto.Signer = &hashComparer{}
 
 type HashFunc func([]byte) bytesconv.BytesResult
 
@@ -42,6 +45,11 @@ func New(fname string) (*hashComparer, error) {
 	return &hashComparer{
 		hashFunc: f,
 	}, nil
+}
+
+func (c *hashComparer) Sign(msg []byte) ([]byte, error) {
+	ret := c.hashFunc(msg)
+	return ret.Bytes(), nil
 }
 
 func (c *hashComparer) Verify(msg, target []byte) bool {
