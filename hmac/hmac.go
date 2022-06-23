@@ -21,13 +21,13 @@ var _ crypto.Signer = &hashComparer{}
 type HMacFunc func(key, msg []byte) bytesconv.BytesResult
 
 var hmacFuncs = map[string]HMacFunc{
-	"MD5":    Md5,
-	"SHA1":   Sha1,
-	"SHA224": Sha224,
-	"SHA256": Sha256,
-	"SHA384": Sha384,
-	"SHA512": Sha512,
-	"SM3":    Sm3,
+	"HmacMD5":    Md5,
+	"HmacSHA1":   Sha1,
+	"HmacSHA224": Sha224,
+	"HmacSHA256": Sha256,
+	"HmacSHA384": Sha384,
+	"HmacSHA512": Sha512,
+	"HmacSM3":    Sm3,
 }
 
 type hashComparer struct {
