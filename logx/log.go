@@ -1,5 +1,7 @@
 package logx
 
+import "io"
+
 var std = defaultLogger()
 
 func StandardLogger() Logger {
@@ -34,4 +36,5 @@ type Logger interface {
 	Println(args ...any)
 	Print(args ...any)
 	Printf(format string, args ...any)
+	Writer() io.Writer
 }

@@ -1,6 +1,8 @@
 package logx
 
 import (
+	"io"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,4 +38,8 @@ func (l *logrusWrpper) WithFields(fields Fields) Logger {
 	}
 
 	return l
+}
+
+func (l *logrusWrpper) Writer() io.Writer {
+	return l.Entry.Writer()
 }
