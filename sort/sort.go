@@ -40,7 +40,9 @@ func (s *mapSorter[T]) Desc() *mapSorter[T] {
 
 func (s *mapSorter[T]) Join(sep string, f func(k string, v T) string) string {
 	slice := make([]string, 0, len(s.m))
-	for _, k := range s.keys {
+
+	keys := s.keys[:]
+	for _, k := range keys {
 		slice = append(slice, f(k, s.m[k]))
 	}
 
@@ -53,7 +55,9 @@ func (s *mapSorter[T]) Keys() []string {
 
 func (s *mapSorter[T]) Values() []T {
 	ret := make([]T, 0, len(s.m))
-	for _, k := range s.keys {
+
+	keys := s.keys[:]
+	for _, k := range keys {
 		ret = append(ret, s.m[k])
 	}
 

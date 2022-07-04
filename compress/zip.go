@@ -42,7 +42,8 @@ func (z *zipPackage) Write(out *os.File) error {
 	zipWriter := zip.NewWriter(out)
 	defer zipWriter.Close()
 
-	for _, f := range z.files {
+	files := z.files
+	for _, f := range files {
 		fileWriter, err := zipWriter.Create(f.name)
 		if err != nil {
 			return err

@@ -36,7 +36,8 @@ func (s *Struct) Kind() reflect.Kind {
 
 func (s *Struct) Names() []string {
 	names := make([]string, len(s.fields))
-	for i, f := range s.fields {
+	fields := s.fields[:]
+	for i, f := range fields {
 		names[i] = f.name
 	}
 
@@ -45,7 +46,9 @@ func (s *Struct) Names() []string {
 
 func (s *Struct) Values() []any {
 	values := make([]any, 0, len(s.fields))
-	for _, fi := range s.fields {
+
+	fields := s.fields[:]
+	for _, fi := range fields {
 		v := s.value.FieldByName(fi.name)
 		values = append(values, v.Interface())
 	}
@@ -54,7 +57,8 @@ func (s *Struct) Values() []any {
 }
 
 func (s *Struct) IsZero() bool {
-	for _, fi := range s.fields {
+	fields := s.fields[:]
+	for _, fi := range fields {
 		source := s.value.FieldByName(fi.name)
 		if !source.IsZero() {
 			return false
@@ -66,7 +70,9 @@ func (s *Struct) IsZero() bool {
 
 func (s *Struct) ToMap() map[string]any {
 	m := make(map[string]any, len(s.fields))
-	for _, fi := range s.fields {
+
+	fields := s.fields[:]
+	for _, fi := range fields {
 		source := s.value.FieldByName(fi.name)
 		if fi.shouldIgnore(source) {
 			continue
@@ -109,7 +115,8 @@ func (s *Struct) Copy(dest any) error {
 }
 
 func (s *Struct) getByName(name string) (field, bool) {
-	for i := range s.fields {
+	fields := s.fields[:]
+	for i := range fields {
 		f := s.fields[i]
 		if f.name == name {
 			return f, true

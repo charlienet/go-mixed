@@ -16,7 +16,9 @@ func (r BytesResult) Hex() string {
 func (r BytesResult) UppercaseHex() string {
 	dst := make([]byte, hex.EncodedLen(len(r)))
 	j := 0
-	for _, v := range r {
+
+	re := r[:]
+	for _, v := range re {
 		dst[j] = hextable[v>>4]
 		dst[j+1] = hextable[v&0x0f]
 		j += 2

@@ -26,7 +26,8 @@ func NewBloomFilter() *BloomFilter {
 }
 
 func (bf *BloomFilter) Add(value string) {
-	for _, f := range bf.funcs {
+	funcs := bf.funcs[:]
+	for _, f := range funcs {
 		bf.set.Set(f.hash(value))
 	}
 }
@@ -36,7 +37,9 @@ func (bf *BloomFilter) Contains(value string) bool {
 		return false
 	}
 	ret := true
-	for _, f := range bf.funcs {
+
+	funcs := bf.funcs[:]
+	for _, f := range funcs {
 		ret = ret && bf.set.Test(f.hash(value))
 	}
 	return ret

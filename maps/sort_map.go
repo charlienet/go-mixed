@@ -88,7 +88,8 @@ func (m *sorted_map[K, V]) Iter() <-chan *Entry[K, V] {
 }
 
 func (m *sorted_map[K, V]) ForEach(f func(K, V) bool) {
-	for _, k := range m.keys {
+	keys := m.keys[:]
+	for _, k := range keys {
 		if v, ok := m.Get(k); ok {
 			if f(k, v) {
 				break
