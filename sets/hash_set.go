@@ -6,37 +6,62 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charlienet/go-mixed/locker"
 	"golang.org/x/exp/constraints"
 )
 
 var _ Set[string] = &hash_set[string]{}
 
-type hash_set[T constraints.Ordered] map[T]struct{}
+type hash_set[T constraints.Ordered] struct {
+	m    map[T]struct{}
+	lock locker.RWLocker
+}
 
 func NewHashSet[T constraints.Ordered](values ...T) *hash_set[T] {
-	set := make(hash_set[T], len(values))
+	set := hash_set[T]{
+		m:    make(map[T]struct{}, len(values)),
+		lock: locker.EmptyLocker,
+	}
+
 	set.Add(values...)
 	return &set
 }
 
+func (s *hash_set[T]) WithSync() *hash_set[T] {
+	s.lock = locker.NewRWLocker()
+	return s
+}
+
 func (s hash_set[T]) Add(values ...T) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	for _, v := range values {
-		s[v] = struct{}{}
+		s.m[v] = struct{}{}
 	}
 }
 
 func (s hash_set[T]) Remove(v T) {
-	delete(s, v)
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	delete(s.m, v)
 }
 
 func (s hash_set[T]) Contains(value T) bool {
-	_, ok := s[value]
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	_, ok := s.m[value]
 	return ok
 }
 
 func (s hash_set[T]) ContainsAny(values ...T) bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
 	for _, v := range values {
-		if _, ok := s[v]; ok {
+		if _, ok := s.m[v]; ok {
 			return true
 		}
 	}
@@ -45,8 +70,11 @@ func (s hash_set[T]) ContainsAny(values ...T) bool {
 }
 
 func (s hash_set[T]) ContainsAll(values ...T) bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
 	for _, v := range values {
-		if _, ok := s[v]; !ok {
+		if _, ok := s.m[v]; !ok {
 			return false
 		}
 	}
@@ -64,7 +92,7 @@ func (s hash_set[T]) Desc() Set[T] {
 
 func (s hash_set[T]) copyToSorted() Set[T] {
 	orderd := NewSortedSet[T]()
-	for k := range s {
+	for k := range s.m {
 		orderd.Add(k)
 	}
 
@@ -78,7 +106,7 @@ func (s *hash_set[T]) Clone() *hash_set[T] {
 }
 
 func (s hash_set[T]) Iterate(fn func(value T)) {
-	for v := range s {
+	for v := range s.m {
 		fn(v)
 	}
 }
@@ -93,17 +121,17 @@ func (s hash_set[T]) ToSlice() []T {
 }
 
 func (s hash_set[T]) IsEmpty() bool {
-	return len(s) == 0
+	return len(s.m) == 0
 }
 
 func (s hash_set[T]) Size() int {
-	return len(s)
+	return len(s.m)
 }
 
 func (s hash_set[T]) MarshalJSON() ([]byte, error) {
 	items := make([]string, 0, s.Size())
 
-	for ele := range s {
+	for ele := range s.m {
 		b, err := json.Marshal(ele)
 		if err != nil {
 			return nil, err
@@ -135,8 +163,8 @@ func (s hash_set[T]) UnmarshalJSON(b []byte) error {
 }
 
 func (s hash_set[T]) String() string {
-	l := make([]string, 0, len(s))
-	for k := range s {
+	l := make([]string, 0, len(s.m))
+	for k := range s.m {
 		l = append(l, fmt.Sprint(k))
 	}
 

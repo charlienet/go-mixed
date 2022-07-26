@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"testing"
 )
 
@@ -36,4 +37,17 @@ func BenchmarkStringSplice(b *testing.B) {
 			_ = logStr
 		}
 	})
+}
+
+func TestIPSegment(t *testing.T) {
+	i, n, err := net.ParseCIDR("0.0.0.0/0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(i, n)
+
+	address := net.ParseIP("192.168.0.2")
+
+	t.Log(n.Contains(address))
 }
