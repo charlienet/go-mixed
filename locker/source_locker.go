@@ -2,53 +2,93 @@ package locker
 
 import (
 	"fmt"
+	"sync/atomic"
 )
+
+// 带计数器锁
+type countLocker struct {
+	Locker
+	Count int32
+}
 
 // 资源锁
 type SourceLocker struct {
 	m     RWLocker
-	locks map[string]Locker
+	locks map[string]*countLocker
 }
 
 func NewSourceLocker() *SourceLocker {
 	return &SourceLocker{
 		m:     NewRWLocker(),
-		locks: make(map[string]Locker),
+		locks: make(map[string]*countLocker),
 	}
 }
 
 func (s *SourceLocker) Lock(key string) {
 	s.m.RLock()
 	l, ok := s.locks[key]
+	s.m.RUnlock()
 
 	if ok {
-		s.m.RUnlock()
-
+		atomic.AddInt32(&l.Count, 1)
 		l.Lock()
+
 		fmt.Println("加锁")
 	} else {
-		s.m.RUnlock()
-
+		// 加锁，再次检查是否已经具有锁
 		s.m.Lock()
-		new := NewLocker()
-		s.locks[key] = new
-		s.m.Unlock()
+		if l2, ok := s.locks[key]; ok {
+			s.m.Unlock()
 
-		new.Lock()
-		fmt.Println("初始加锁")
+			l2.Lock()
+			fmt.Println("二次检查加锁")
+		} else {
+			new := NewLocker()
+			s.locks[key] = &countLocker{Locker: new, Count: 1}
+
+			s.m.Unlock()
+
+			fmt.Printf("新锁准备加锁:%p\n", new)
+			new.Lock()
+
+			fmt.Println("初始加锁")
+		}
 	}
 }
 
 func (s *SourceLocker) Unlock(key string) {
 	s.m.Lock()
+
 	if l, ok := s.locks[key]; ok {
+		atomic.AddInt32(&l.Count, -1)
+		fmt.Printf("解锁%p\n", l)
 		l.Unlock()
-		// delete(s.locks, key)
-		fmt.Println("解锁")
+
+		if l.Count == 0 {
+			delete(s.locks, key)
+		}
 	}
 	s.m.Unlock()
 }
 
 func (s *SourceLocker) TryLock(key string) bool {
-	return false
+	// 加读锁
+	s.m.RLock()
+	l, ok := s.locks[key]
+
+	if ok {
+		ret := l.TryLock()
+		s.m.RUnlock()
+
+		return ret
+	} else {
+		s.m.RUnlock()
+
+		s.m.Lock()
+		new := NewLocker()
+		s.locks[key] = &countLocker{Locker: new, Count: 1}
+		s.m.Unlock()
+
+		return new.TryLock()
+	}
 }

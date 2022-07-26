@@ -7,6 +7,7 @@ import (
 const (
 	layoutDate        = "2006-01-02"
 	layoutTime        = "2006-01-02 15:04:05"
+	layoutTimeMilli   = "2006-01-02 15:04:05.000"
 	layoutChineseDate = "2006年01月02日"
 	layoutChineseTime = "2006年01月02日 15:04:05"
 )
