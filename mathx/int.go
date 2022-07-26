@@ -14,3 +14,10 @@ func Max[T constraints.Ordered](v1, v2 T) T {
 func Min[T constraints.Ordered](v1, v2 T) T {
 	return expr.If(v1 < v2, v1, v2)
 }
+
+
+
+func abs(n int64) int64 {
+	y := n >> 63
+	return (n ^ y) - y
+}
