@@ -3,8 +3,12 @@ package iprange
 import (
 	"fmt"
 	"net/netip"
+	"regexp"
+	"strconv"
 	"strings"
 )
+
+var maskPattern = regexp.MustCompile(`\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`)
 
 type IpRange struct {
 	segments []ipSegment
@@ -96,7 +100,15 @@ func createSegment(ip string) (ipSegment, error) {
 		}, nil
 
 	case strings.Contains(ip, "/"):
-		if prefix, err := netip.ParsePrefix(ip); err != nil {
+		sec := strings.Split(ip, "/")
+		ip := sec[0]
+		mask := sec[1]
+
+		if maskPattern.MatchString(mask) {
+			mask = strconv.Itoa(MaskToBits(mask))
+		}
+
+		if prefix, err := netip.ParsePrefix(ip + "/" + mask); err != nil {
 			return nil, err
 		} else {
 			return &prefixSegments{prefix: prefix}, nil

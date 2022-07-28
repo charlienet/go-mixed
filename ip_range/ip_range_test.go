@@ -30,6 +30,31 @@ func TestSingleIp(t *testing.T) {
 	assert.False(t, r.Contains("192.168.0.123"))
 }
 
+func TestSinglePrefix(t *testing.T) {
+	r, err := NewRange("192.168.2.100/32")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.False(t, r.Contains("192.168.2.56"))
+	assert.True(t, r.Contains("192.168.2.100"))
+	assert.False(t, r.Contains("192.168.2.130"))
+}
+
+func TestAllIp(t *testing.T) {
+	r, err := NewRange("0.0.0.0/0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, r.Contains("192.168.2.100"))
+	assert.True(t, r.Contains("192.3.2.100"))
+	assert.True(t, r.Contains("192.65.2.100"))
+	assert.True(t, r.Contains("172.168.2.100"))
+	assert.True(t, r.Contains("8.8.8.8"))
+	assert.True(t, r.Contains("114.114.114.114"))
+}
+
 func TestPrefix(t *testing.T) {
 	r, err := NewRange("192.168.2.0/24")
 	if err != nil {
@@ -43,6 +68,18 @@ func TestPrefix(t *testing.T) {
 
 func TestPrefix2(t *testing.T) {
 	r, err := NewRange("192.168.15.0/21")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, r.Contains("192.168.8.10"))
+	assert.True(t, r.Contains("192.168.14.162"))
+	assert.False(t, r.Contains("192.168.3.162"))
+	assert.False(t, r.Contains("192.168.2.162"))
+}
+
+func TestDotMask(t *testing.T) {
+	r, err := NewRange("192.168.15.0/255.255.248.0")
 	if err != nil {
 		t.Fatal(err)
 	}
