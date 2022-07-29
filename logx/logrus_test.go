@@ -39,9 +39,3 @@ func TestLevel(t *testing.T) {
 	// logger.SetLevel(l)
 	logger.Info("bcdefg")
 }
-
-func TestMutiWriter(t *testing.T) {
-	l := NewLogger().AppendLogger()
-
-	_ = l
-}

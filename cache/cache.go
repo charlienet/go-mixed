@@ -3,9 +3,11 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/charlienet/go-mixed/bytesconv"
+	"github.com/charlienet/go-mixed/locker"
 	"github.com/charlienet/go-mixed/logx"
 )
 
@@ -14,13 +16,14 @@ var ErrNotFound = errors.New("key not found")
 type LoadFunc func(context.Context) (any, error)
 
 type Cache struct {
-	prefix           string           // 键前缀
-	retry            int              // 资源获取时的重试次数
-	mem              MemCache         // 内存缓存
-	distributdCache  DistributdCache  // 分布式缓存
-	publishSubscribe PublishSubscribe // 发布订阅
-	qps              *qps             //
-	logger           logx.Logger      // 日志记录
+	prefix           string            // 键前缀
+	retry            int               // 资源获取时的重试次数
+	mem              MemCache          // 内存缓存
+	distributdCache  DistributdCache   // 分布式缓存
+	publishSubscribe PublishSubscribe  // 发布订阅
+	lock             locker.ChanLocker // 资源锁
+	qps              *qps              // 访问计数
+	logger           logx.Logger       // 日志记录
 }
 
 func NewCache(opts ...option) *Cache {
@@ -112,14 +115,36 @@ func (c *Cache) getFromMem(key string, out any) error {
 
 // 从缓存加载数据
 func (c *Cache) getFromCache() {
-
+	// 从缓存加载数据
+	// 1. 检查内存是否存在
+	// 2. 检查分布缓存是否存在
 }
 
 // 从数据源加载数据
-func (c *Cache) getFromSource(ctx context.Context, key string, fn LoadFunc) {
+func (c *Cache) getFromSource(ctx context.Context, key string, fn LoadFunc) error {
 
 	// 1. 尝试获取资源锁，如成功获取到锁加载数据
 	// 2. 未获取到锁，等待从缓存中获取
-	fn(ctx)
+	ch, ok := c.lock.Get(key)
+	if ok {
+		defer c.lock.Release(key)
 
+		v, err := fn(ctx)
+		if err != nil {
+			return fmt.Errorf("load from source err:%v", err)
+		}
+
+		// 取出值存入多级缓存
+		_ = v
+
+		return nil
+	}
+
+	// 等待数据加载完成
+	select {
+	case <-ch:
+
+		// 未取到结果时，再次获取
+		return c.getFromSource(ctx, key, fn)
+	}
 }

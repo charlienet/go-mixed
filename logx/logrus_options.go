@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/charlienet/go-mixed/fs"
 	"github.com/sirupsen/logrus"
@@ -32,11 +33,12 @@ type LogrusOutputOptions struct {
 }
 
 type LogrusBackupOptions struct {
-	MaxSize    int  // 默认大小100M
-	MaxAge     int  // 备份保留天数
-	MaxBackups int  // 备份保留数量
-	LocalTime  bool // 使用本地时间
-	Compress   bool // 是否压缩备份
+	BackupType Rotate // 分割类型
+	MaxSize    int    // 默认大小100M
+	MaxAge     int    // 备份保留天数
+	MaxBackups int    // 备份保留数量
+	LocalTime  bool   // 使用本地时间
+	Compress   bool   // 是否压缩备份
 }
 
 func (o LogrusBackupOptions) hasBackup() bool {
@@ -66,6 +68,7 @@ func WithFormatter(formatter logrus.Formatter) logrusOption {
 }
 
 func WithOutput(options LogrusOutputOptions) logrusOption {
+	_ = time.Now()
 	return func(l *logrus.Logger) {
 		var writer io.Writer
 		switch {

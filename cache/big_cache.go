@@ -58,7 +58,8 @@ func (c *bigCacheClient) Set(key string, entry []byte, expire time.Duration) err
 }
 
 func (c *bigCacheClient) Delete(keys ...string) error {
-	for _, k := range keys {
+	ks := keys[:]
+	for _, k := range ks {
 		if err := c.cache.Delete(k); err != nil {
 			return err
 		}
