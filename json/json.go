@@ -5,6 +5,9 @@ package json
 
 import "encoding/json"
 
+func RegisterFuzzyDecoders() {
+}
+
 var (
 	Marshal       = json.Marshal
 	Unmarshal     = json.Unmarshal
