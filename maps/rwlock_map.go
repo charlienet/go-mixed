@@ -62,6 +62,10 @@ func (m *rw_map[K, V]) ToMap() map[K]V {
 	return m.m.ToMap()
 }
 
+func (m *rw_map[K, V]) Shrink() map[K]V {
+	return m.m.ToMap()
+}
+
 func (m *rw_map[K, V]) Exist(key K) bool {
 	return m.m.Exist(key)
 }
