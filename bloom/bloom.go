@@ -1,6 +1,9 @@
 package bloom
 
-import "github.com/bits-and-blooms/bitset"
+import (
+	"github.com/bits-and-blooms/bitset"
+	"github.com/charlienet/go-mixed/locker"
+)
 
 const DEFAULT_SIZE = 2 << 24
 
@@ -12,24 +15,53 @@ type simplehash struct {
 }
 
 type BloomFilter struct {
-	set   *bitset.BitSet
-	funcs [6]simplehash
+	size  int            // 布隆过滤器大小
+	set   *bitset.BitSet // 位图
+	funcs [6]simplehash  // 哈希函数
+	lock  locker.RWLocker
 }
 
-func NewBloomFilter() *BloomFilter {
-	bf := new(BloomFilter)
-	for i := 0; i < len(bf.funcs); i++ {
-		bf.funcs[i] = simplehash{DEFAULT_SIZE, seeds[i]}
+type bloomOptions struct {
+	Size int
+}
+
+type option func(*bloomOptions)
+
+// 布隆过滤器中所有位长度，请根据存储数量进行评估
+func WithSize(size int) option {
+	return func(bo *bloomOptions) {
+		bo.Size = size
 	}
-	bf.set = bitset.New(DEFAULT_SIZE)
+}
+
+func NewBloomFilter(opts ...option) *BloomFilter {
+	opt := &bloomOptions{
+		Size: DEFAULT_SIZE,
+	}
+
+	for _, f := range opts {
+		f(opt)
+	}
+
+	bf := &BloomFilter{
+		size: opt.Size,
+		lock: locker.NewRWLocker(),
+	}
+
+	for i := 0; i < len(bf.funcs); i++ {
+		bf.funcs[i] = simplehash{uint(opt.Size), seeds[i]}
+	}
+	bf.set = bitset.New(uint(opt.Size))
 	return bf
 }
 
 func (bf *BloomFilter) Add(value string) {
 	funcs := bf.funcs[:]
+
 	for _, f := range funcs {
 		bf.set.Set(f.hash(value))
 	}
+
 }
 
 func (bf *BloomFilter) Contains(value string) bool {
@@ -42,7 +74,13 @@ func (bf *BloomFilter) Contains(value string) bool {
 	for _, f := range funcs {
 		ret = ret && bf.set.Test(f.hash(value))
 	}
+
 	return ret
+}
+
+// 清空布隆过滤器
+func (bf *BloomFilter) Clear() {
+	bf.set.ClearAll()
 }
 
 func (s simplehash) hash(value string) uint {
