@@ -3,7 +3,7 @@ module github.com/charlienet/go-mixed
 go 1.18
 
 require (
-	github.com/bits-and-blooms/bitset v1.3.0
+	github.com/bits-and-blooms/bitset v1.3.3
 	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/json-iterator/go v1.1.12
@@ -31,7 +31,7 @@ require (
 require (
 	github.com/allegro/bigcache/v3 v3.0.2
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
-	github.com/coocood/freecache v1.2.1
+	github.com/coocood/freecache v1.2.2
 	github.com/dlclark/regexp2 v1.7.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
