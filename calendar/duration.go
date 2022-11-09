@@ -1,4 +1,4 @@
-package dateconv
+package calendar
 
 import "time"
 
