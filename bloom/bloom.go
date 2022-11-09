@@ -54,7 +54,7 @@ func NewBloomFilter(expectedInsertions uint, fpp float64, opts ...option) *Bloom
 	bf := &BloomFilter{
 		bits:  bits,
 		funcs: k,
-		store: expr.If[bitStore](
+		store: expr.Ternary[bitStore](
 			opt.redisClient == nil,
 			newMemStore(bits),
 			newRedisStore(opt.redisClient, opt.redisKey, bits)),
