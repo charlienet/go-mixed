@@ -19,7 +19,7 @@ func parseField(fi reflect.StructField, opt option) field {
 
 	return field{
 		name:        fi.Name,
-		tagName:     expr.If(isValidTag(name), name, expr.If(opt.NameConverter != nil, opt.NameConverter(fi.Name), fi.Name)),
+		tagName:     expr.Ternary(isValidTag(name), name, expr.Ternary(opt.NameConverter != nil, opt.NameConverter(fi.Name), fi.Name)),
 		ignoreEmpty: opt.IgnoreEmpty || (opts.Contains("omitempty") && opt.Omitempty),
 		ignore:      (name == "-" && opt.Ignore) || isSkipField(fi.Name, opt.SkipFields),
 	}
