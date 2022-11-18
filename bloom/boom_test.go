@@ -16,7 +16,7 @@ import (
 const ()
 
 func TestBloom(t *testing.T) {
-	b := bloom.NewBloomFilter(1000, 0.03)
+	b := bloom.New(1000, 0.03)
 
 	for i := 0; i < 1000000; i++ {
 		b.Add(strconv.Itoa(i))
@@ -54,7 +54,7 @@ func TestRedis(t *testing.T) {
 		Password: "123456",
 	})
 
-	bf := bloom.NewBloomFilter(10000, 0.03, bloom.WithRedis(client, "bloom:test"))
+	bf := bloom.New(10000, 0.03, bloom.WithRedis(client, "bloom:test"))
 
 	for i := 0; i < 100; i++ {
 		bf.Add(strconv.Itoa(i))
@@ -78,7 +78,7 @@ func TestRedis(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	bf := bloom.NewBloomFilter(1000, 0.03)
+	bf := bloom.New(1000, 0.03)
 
 	v := "abc"
 	bf.Add(v)
@@ -91,7 +91,7 @@ func TestClear(t *testing.T) {
 }
 
 func TestParallel(t *testing.T) {
-	f := bloom.NewBloomFilter(1000, 0.03)
+	f := bloom.New(1000, 0.03)
 
 	for i := 0; i < 10000; i++ {
 		v := rand.Hex.Generate(10)
@@ -104,7 +104,7 @@ func TestParallel(t *testing.T) {
 }
 
 func BenchmarkFilter(b *testing.B) {
-	f := bloom.NewBloomFilter(1000, 0.03)
+	f := bloom.New(1000, 0.03)
 
 	b.RunParallel(func(p *testing.PB) {
 		for p.Next() {

@@ -39,9 +39,9 @@ func WithRedis(redis *redis.Client, key string) option {
 	}
 }
 
-// 初始化布隆过滤器
+// New 初始化布隆过滤器
 // https://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
-func NewBloomFilter(expectedInsertions uint, fpp float64, opts ...option) *BloomFilter {
+func New(expectedInsertions uint, fpp float64, opts ...option) *BloomFilter {
 	opt := &bloomOptions{}
 
 	for _, f := range opts {
