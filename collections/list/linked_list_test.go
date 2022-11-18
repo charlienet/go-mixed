@@ -87,12 +87,17 @@ func BenchmarkLinkedList(b *testing.B) {
 }
 
 func TestRemoveNode(t *testing.T) {
-	l := list.NewLinkedList(1, 2, 4)
+	l := list.NewLinkedList(1, 2, 3, 4, 5)
 
-	l.ForEach(func(i int) bool {
-		t.Log(i)
+	// l.ForEach(func(i int) bool {
+	// 	t.Log(i)
 
-		return false
-	})
+	// 	return false
+	// })
+
+	l.RemoveAt(1)
+	for currnet := l.FrontNode(); currnet != nil; currnet = currnet.Next {
+		t.Logf("%p   %+v", currnet, currnet)
+	}
 
 }

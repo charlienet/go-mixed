@@ -14,6 +14,7 @@ type LinkedNode[T any] struct {
 	Prev, Next *LinkedNode[T]
 }
 
+// NewLinkedList 初始化链表
 func NewLinkedList[T any](elems ...T) *LinkedList[T] {
 	l :=
 		&LinkedList[T]{
@@ -99,6 +100,9 @@ func (l *LinkedList[T]) Remove(n *LinkedNode[T]) {
 		l.front = n.Next
 	}
 
+	n.Next = nil
+	n.Prev = nil
+
 	l.size--
 }
 
@@ -107,24 +111,22 @@ func (l *LinkedList[T]) RemoveAt(index int) {
 	defer l.locker.Unlock()
 
 	var i int
-	var prev *LinkedNode[T]
-
-	prev = l.front
-	for current := l.front; current != nil; {
-
+	for current := l.front; current != nil; current = current.Next {
 		if i == index {
-			prev.Next = current.Next
+
+			// 重连接
+			current.Prev.Next = current.Next
+			current.Next.Prev = current.Prev
+
+			current.Prev = nil
 			current.Next = nil
 
 			l.size--
-			return
+			break
 		}
 
-		prev = current
-		current = current.Next
 		i++
 	}
-
 }
 
 func (l *LinkedList[T]) pushBackNode(n *LinkedNode[T]) {
