@@ -85,3 +85,14 @@ func BenchmarkLinkedList(b *testing.B) {
 		l.PushBack(i)
 	}
 }
+
+func TestRemoveNode(t *testing.T) {
+	l := list.NewLinkedList(1, 2, 4)
+
+	l.ForEach(func(i int) bool {
+		t.Log(i)
+
+		return false
+	})
+
+}

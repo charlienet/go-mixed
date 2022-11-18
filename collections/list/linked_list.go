@@ -15,9 +15,16 @@ type LinkedNode[T any] struct {
 }
 
 func NewLinkedList[T any](elems ...T) *LinkedList[T] {
-	return &LinkedList[T]{
-		list: list[T]{locker: locker.EmptyLocker},
+	l :=
+		&LinkedList[T]{
+			list: list[T]{locker: locker.EmptyLocker},
+		}
+
+	for _, e := range elems {
+		l.pushBackNode(&LinkedNode[T]{Value: e})
 	}
+
+	return l
 }
 
 func (l *LinkedList[T]) PushBack(v T) *LinkedList[T] {
@@ -60,6 +67,20 @@ func (l *LinkedList[T]) ForEach(fn func(T) bool) {
 			break
 		}
 	}
+}
+
+func (l *LinkedList[T]) GetAt(i int) T {
+	if i <= l.Size() {
+		var n int
+		for current := l.front; current != nil; current = current.Next {
+			if n == i {
+				return current.Value
+			}
+			n++
+		}
+	}
+
+	return *new(T)
 }
 
 func (l *LinkedList[T]) Remove(n *LinkedNode[T]) {
