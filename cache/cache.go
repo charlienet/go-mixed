@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/charlienet/go-mixed/bytesconv"
+	"github.com/charlienet/go-mixed/json"
 	"github.com/charlienet/go-mixed/locker"
 	"github.com/charlienet/go-mixed/logx"
 )
@@ -22,6 +23,7 @@ type Cache struct {
 	distributdCache  DistributdCache   // 分布式缓存
 	publishSubscribe PublishSubscribe  // 发布订阅
 	lock             locker.ChanLocker // 资源锁
+	stats            *Stats            // 缓存命中计数
 	qps              *qps              // 访问计数
 	logger           logx.Logger       // 日志记录
 }
@@ -147,4 +149,40 @@ func (c *Cache) getFromSource(ctx context.Context, key string, fn LoadFunc) erro
 		// 未取到结果时，再次获取
 		return c.getFromSource(ctx, key, fn)
 	}
+}
+
+func (c *Cache) marshal(value any) ([]byte, error) {
+	switch value := value.(type) {
+	case nil:
+		return nil, nil
+	case []byte:
+		return value, nil
+	case string:
+		return []byte(value), nil
+	}
+
+	b, err := json.Marshal(value)
+	return b, err
+}
+
+func (c *Cache) unmarshal(b []byte, value any) error {
+	if len(b) == 0 {
+		return nil
+	}
+
+	switch value := value.(type) {
+	case nil:
+		return nil
+	case *[]byte:
+		clone := make([]byte, len(b))
+		copy(clone, b)
+		*value = clone
+		return nil
+	case *string:
+		*value = string(b)
+		return nil
+	}
+
+	err := json.Unmarshal(b, value)
+	return err
 }
