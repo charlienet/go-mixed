@@ -25,3 +25,8 @@ func TestForEach(t *testing.T) {
 		assert.True(t, hashMap.Exist(k))
 	}
 }
+
+func TestSynchronize(t *testing.T) {
+	mep := NewHashMap[string, string]().Synchronize()
+	mep.Set("aaaa", "bbb")
+}

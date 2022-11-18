@@ -3,29 +3,27 @@ package maps
 import (
 	"fmt"
 
-	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 
 	xmaps "golang.org/x/exp/maps"
 )
 
 var (
-	_ Map[string, any]       = &sorted_map[string, any]{}
 	_ SortedMap[string, any] = &sorted_map[string, any]{}
 )
 
-type SortedMap[K constraints.Ordered, V any] interface {
+type SortedMap[K hashable, V any] interface {
 	Map[K, V]
 	Asc() SortedMap[K, V]
 	Desc() SortedMap[K, V]
 }
 
-type sorted_map[K constraints.Ordered, V any] struct {
+type sorted_map[K hashable, V any] struct {
 	keys []K
 	maps Map[K, V]
 }
 
-func NewSortedMap[K constraints.Ordered, V any](maps ...map[K]V) *sorted_map[K, V] {
+func NewSortedMap[K hashable, V any](maps ...map[K]V) *sorted_map[K, V] {
 	merged := Merge(maps...)
 	return &sorted_map[K, V]{
 		keys: xmaps.Keys(merged),
@@ -33,7 +31,7 @@ func NewSortedMap[K constraints.Ordered, V any](maps ...map[K]V) *sorted_map[K, 
 	}
 }
 
-func NewSortedByMap[K constraints.Ordered, V any](m Map[K, V]) *sorted_map[K, V] {
+func NewSortedByMap[K hashable, V any](m Map[K, V]) *sorted_map[K, V] {
 	return &sorted_map[K, V]{maps: m, keys: m.Keys()}
 }
 
@@ -43,6 +41,8 @@ func (m *sorted_map[K, V]) Get(key K) (V, bool) {
 
 func (m *sorted_map[K, V]) Set(key K, value V) {
 	m.maps.Set(key, value)
+
+	slices.Sort(m.keys)
 	m.keys = append(m.keys, key)
 }
 
@@ -59,15 +59,6 @@ func (m *sorted_map[K, V]) Delete(key K) {
 
 func (m *sorted_map[K, V]) Count() int {
 	return m.maps.Count()
-}
-
-func (m *sorted_map[K, V]) Clear() {
-	m.keys = make([]K, 0)
-	m.maps.Clear()
-}
-
-func (m *sorted_map[K, V]) Clone() Map[K, V] {
-	return &sorted_map[K, V]{maps: m.maps.Clone(), keys: m.Keys()}
 }
 
 func (m *sorted_map[K, V]) Iter() <-chan *Entry[K, V] {

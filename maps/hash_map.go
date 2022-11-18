@@ -2,15 +2,14 @@ package maps
 
 import (
 	"github.com/charlienet/go-mixed/locker"
-	"golang.org/x/exp/constraints"
 )
 
-type hashMap[K constraints.Ordered, V any] struct {
+type hashMap[K hashable, V any] struct {
 	m   map[K]V
 	opt *options
 }
 
-func NewHashMap[K constraints.Ordered, V any](maps ...map[K]V) *hashMap[K, V] {
+func NewHashMap[K hashable, V any](maps ...map[K]V) *hashMap[K, V] {
 	m := make(map[K]V)
 	if len(maps) > 0 {
 		m = Merge(maps...)
@@ -74,7 +73,7 @@ func (m *hashMap[K, V]) Iter() <-chan *Entry[K, V] {
 	return ch
 }
 
-func (m *hashMap[K, V]) ForEach(f func(K, V) bool ) {
+func (m *hashMap[K, V]) ForEach(f func(K, V) bool) {
 	cloned := m.ToMap()
 
 	for k, v := range cloned {

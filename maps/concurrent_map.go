@@ -7,17 +7,16 @@ import (
 
 	"github.com/charlienet/go-mixed/bytesconv"
 	"github.com/charlienet/go-mixed/hash"
-	"golang.org/x/exp/constraints"
 )
 
 var defaultNumOfBuckets = runtime.GOMAXPROCS(runtime.NumCPU())
 
-type concurrnetMap[K constraints.Ordered, V any] struct {
+type concurrnetMap[K hashable, V any] struct {
 	buckets      []Map[K, V]
 	numOfBuckets uint64
 }
 
-func NewConcurrentMap[K constraints.Ordered, V any](maps ...map[K]V) *concurrnetMap[K, V] {
+func NewConcurrentMap[K hashable, V any](maps ...map[K]V) *concurrnetMap[K, V] {
 	num := defaultNumOfBuckets
 
 	buckets := make([]Map[K, V], num)
@@ -57,16 +56,16 @@ func (m *concurrnetMap[K, V]) Exist(key K) bool {
 	return mm.Exist(key)
 }
 
-func (m *concurrnetMap[K, V]) Iter() <-chan *Entry[K, V] {
-	num := int(m.numOfBuckets)
-	ch := make(chan *Entry[K, V], m.Count())
-	for i := 0; i < num; i++ {
-		c := m.buckets[i].Iter()
-		ch <- <-c
-	}
+// func (m *concurrnetMap[K, V]) Iter() <-chan *Entry[K, V] {
+// 	num := int(m.numOfBuckets)
+// 	ch := make(chan *Entry[K, V], m.Count())
+// 	for i := 0; i < num; i++ {
+// 		c := m.buckets[i].Iter()
+// 		ch <- <-c
+// 	}
 
-	return ch
-}
+// 	return ch
+// }
 
 func (m *concurrnetMap[K, V]) Keys() []K {
 	keys := make([]K, m.Count())
@@ -109,27 +108,6 @@ func (m *concurrnetMap[K, V]) ForEach(f func(K, V) bool) {
 	}
 
 	wg.Wait()
-}
-
-func (m *concurrnetMap[K, V]) Clone() Map[K, V] {
-
-	num := int(m.numOfBuckets)
-
-	buckets := make([]Map[K, V], m.numOfBuckets)
-	for i := 0; i < num; i++ {
-		buckets[i] = m.buckets[i].Clone()
-	}
-
-	return &concurrnetMap[K, V]{
-		buckets:      buckets,
-		numOfBuckets: m.numOfBuckets,
-	}
-}
-
-func (m *concurrnetMap[K, V]) Clear() {
-	for i := 0; i < int(m.numOfBuckets); i++ {
-		m.buckets[i].Clear()
-	}
 }
 
 func (m *concurrnetMap[K, V]) Count() int {
