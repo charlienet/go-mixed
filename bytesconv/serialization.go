@@ -20,3 +20,8 @@ func Decode(b []byte, out any) error {
 	dec := gob.NewDecoder(buf)
 	return dec.Decode(out)
 }
+
+func MsgPackage() {
+
+	// msgpack.NewEncoder()
+}

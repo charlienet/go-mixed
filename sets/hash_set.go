@@ -27,7 +27,7 @@ func NewHashSet[T constraints.Ordered](values ...T) *hash_set[T] {
 	return &set
 }
 
-func (s *hash_set[T]) WithSync() *hash_set[T] {
+func (s *hash_set[T]) Sync() *hash_set[T] {
 	s.lock = locker.NewRWLocker()
 	return s
 }
@@ -97,6 +97,10 @@ func (s hash_set[T]) copyToSorted() Set[T] {
 	}
 
 	return orderd
+}
+
+func (s *hash_set[T]) Shrink() *hash_set[T] {
+	return s
 }
 
 func (s *hash_set[T]) Clone() *hash_set[T] {

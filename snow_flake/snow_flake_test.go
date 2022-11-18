@@ -47,7 +47,7 @@ func BenchmarkGetId(b *testing.B) {
 
 func BenchmarkMutiGetId(b *testing.B) {
 	s := CreateSnowflake(11)
-	set := sets.NewHashSet[int64]().WithSync()
+	set := sets.NewHashSet[int64]().Sync()
 	b.RunParallel(func(p *testing.PB) {
 		for i := 0; p.Next(); i++ {
 			id := s.GetId()

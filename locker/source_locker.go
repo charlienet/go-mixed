@@ -11,7 +11,7 @@ type countLocker struct {
 	Count int32
 }
 
-// 资源锁
+// SourceLocker 资源锁
 type SourceLocker struct {
 	m     RWLocker
 	locks map[string]*countLocker
@@ -43,13 +43,13 @@ func (s *SourceLocker) Lock(key string) {
 			l2.Lock()
 			fmt.Println("二次检查加锁")
 		} else {
-			new := NewLocker()
-			s.locks[key] = &countLocker{Locker: new, Count: 1}
+			n := NewLocker()
+			s.locks[key] = &countLocker{Locker: n, Count: 1}
 
 			s.m.Unlock()
 
-			fmt.Printf("新锁准备加锁:%p\n", new)
-			new.Lock()
+			fmt.Printf("新锁准备加锁:%p\n", n)
+			n.Lock()
 
 			fmt.Println("初始加锁")
 		}
@@ -85,10 +85,10 @@ func (s *SourceLocker) TryLock(key string) bool {
 		s.m.RUnlock()
 
 		s.m.Lock()
-		new := NewLocker()
-		s.locks[key] = &countLocker{Locker: new, Count: 1}
+		n := NewLocker()
+		s.locks[key] = &countLocker{Locker: n, Count: 1}
 		s.m.Unlock()
 
-		return new.TryLock()
+		return n.TryLock()
 	}
 }

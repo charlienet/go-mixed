@@ -43,7 +43,7 @@ func (r *rangeSegment) Contains(ip netip.Addr) bool {
 	return ip.Compare(r.start) >= 0 && ip.Compare(r.end) <= 0
 }
 
-// IP范围判断，支持以下规则:
+// NewRange IP范围判断，支持以下规则:
 // 单IP地址，如 192.168.100.2
 // IP范围, 如 192.168.100.120-192.168.100.150
 // 掩码模式，如 192.168.2.0/24

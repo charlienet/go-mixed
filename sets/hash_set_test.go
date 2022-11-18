@@ -29,7 +29,7 @@ func TestContainsAll(t *testing.T) {
 }
 
 func TestContainsAny(t *testing.T) {
-
+	sets.NewHashSet("1", "2").Sync()
 }
 
 func TestMarshal(t *testing.T) {

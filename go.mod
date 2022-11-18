@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
@@ -25,11 +26,15 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tebeka/strftime v0.1.5 // indirect
+	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
+	github.com/alicebob/miniredis/v2 v2.23.0
 	github.com/allegro/bigcache/v3 v3.0.2
+	github.com/alphadose/haxmap v1.0.2
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/coocood/freecache v1.2.2
 	github.com/dlclark/regexp2 v1.7.0
@@ -38,6 +43,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.0
+	github.com/vmihailenco/go-tinylfu v0.2.2
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect

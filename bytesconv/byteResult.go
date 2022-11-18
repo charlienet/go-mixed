@@ -5,9 +5,20 @@ import (
 	"encoding/hex"
 )
 
-const hextable = "0123456789ABCDEF"
+const hexTable = "0123456789ABCDEF"
 
 type BytesResult []byte
+
+// FromHexString 从十六进制获取
+func FromHexString(s string) (BytesResult, error) {
+	b, err := hex.DecodeString(s)
+	return BytesResult(b), err
+}
+
+func FromBase64String(s string) (BytesResult, error) {
+	b, err := base64.StdEncoding.DecodeString(s)
+	return BytesResult(b), err
+}
 
 func (r BytesResult) Hex() string {
 	return hex.EncodeToString(r)
@@ -19,8 +30,8 @@ func (r BytesResult) UppercaseHex() string {
 
 	re := r[:]
 	for _, v := range re {
-		dst[j] = hextable[v>>4]
-		dst[j+1] = hextable[v&0x0f]
+		dst[j] = hexTable[v>>4]
+		dst[j+1] = hexTable[v&0x0f]
 		j += 2
 	}
 
