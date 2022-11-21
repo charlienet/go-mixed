@@ -16,13 +16,32 @@ type ArrayList[T any] struct {
 
 func NewArrayList[T any](elems ...T) *ArrayList[T] {
 	minCap := minCapacity
+
+	size := len(elems)
+	for minCap < size {
+		minCap <<= 1
+	}
+
+	var tail int = size
 	var buf []T
 
-	return &ArrayList[T]{
-		buf:    buf,
-		minCap: minCap,
-		list:   list[T]{locker: locker.EmptyLocker},
+	if len(elems) > 0 {
+		buf = make([]T, minCap)
+		copy(buf, elems)
 	}
+
+	l := &ArrayList[T]{
+		list:   list[T]{size: size, locker: locker.EmptyLocker},
+		buf:    buf,
+		tail:   tail,
+		minCap: minCap,
+	}
+
+	// for _, v := range elems {
+	// 	l.PushBack(v)
+	// }
+
+	return l
 }
 
 func (l *ArrayList[T]) PushFront(v T) {

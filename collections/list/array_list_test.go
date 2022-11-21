@@ -7,9 +7,12 @@ import (
 )
 
 func TestNewArrayList(t *testing.T) {
-	l := list.NewArrayList[int]()
+	l := list.NewArrayList(1, 2, 3)
 
-	_ = l
+	l.ForEach(func(i int) {
+		t.Log(i)
+	})
+
 }
 
 func TestArrayPushBack(t *testing.T) {

@@ -16,10 +16,9 @@ type LinkedNode[T any] struct {
 
 // NewLinkedList 初始化链表
 func NewLinkedList[T any](elems ...T) *LinkedList[T] {
-	l :=
-		&LinkedList[T]{
-			list: list[T]{locker: locker.EmptyLocker},
-		}
+	l := &LinkedList[T]{
+		list: list[T]{locker: locker.EmptyLocker},
+	}
 
 	for _, e := range elems {
 		l.pushBackNode(&LinkedNode[T]{Value: e})
@@ -29,12 +28,18 @@ func NewLinkedList[T any](elems ...T) *LinkedList[T] {
 }
 
 func (l *LinkedList[T]) PushBack(v T) *LinkedList[T] {
+	l.locker.Lock()
+	defer l.locker.Unlock()
+
 	l.pushBackNode(&LinkedNode[T]{Value: v})
 
 	return l
 }
 
 func (l *LinkedList[T]) PushFront(v T) *LinkedList[T] {
+	l.locker.Lock()
+	defer l.locker.Unlock()
+
 	l.pushFrontNode(&LinkedNode[T]{Value: v})
 
 	return l
@@ -130,9 +135,6 @@ func (l *LinkedList[T]) RemoveAt(index int) {
 }
 
 func (l *LinkedList[T]) pushBackNode(n *LinkedNode[T]) {
-	l.locker.Lock()
-	defer l.locker.Unlock()
-
 	n.Next = nil
 	n.Prev = l.tail
 
@@ -148,9 +150,6 @@ func (l *LinkedList[T]) pushBackNode(n *LinkedNode[T]) {
 }
 
 func (l *LinkedList[T]) pushFrontNode(n *LinkedNode[T]) {
-	l.locker.Lock()
-	defer l.locker.Unlock()
-
 	n.Next = l.front
 	n.Prev = nil
 	if l.front != nil {
