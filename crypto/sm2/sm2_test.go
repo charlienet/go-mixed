@@ -1,20 +1,34 @@
-package crypto_test
+package sm2
 
 import (
+	"crypto/rand"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"testing"
 
-	"github.com/charlienet/go-mixed/crypto"
+	"github.com/tjfoc/gmsm/sm2"
+	x "github.com/tjfoc/gmsm/x509"
 )
 
+func TestPem(t *testing.T) {
+
+	key, _ := sm2.GenerateKey(rand.Reader)
+
+	prv, _ := x.WritePrivateKeyToPem(key, []byte{})
+	pub, _ := x.WritePublicKeyToPem(key.Public().(*sm2.PublicKey))
+
+	t.Log(x.WritePublicKeyToHex(&key.PublicKey))
+	t.Log(string(prv))
+	t.Log(string(pub))
+}
+
 func TestNewSm2(t *testing.T) {
-	o, err := crypto.NewSm2()
+	o, err := New()
 	t.Logf("%+v, %v", o, err)
 
-	t.Log(crypto.NewSm2(crypto.ParseSm2PrivateKey([]byte{}, []byte{})))
+	t.Log(New(WithSm2PrivateKey([]byte{}, []byte{})))
 
 	msg := []byte("123456")
 	sign, err := o.Sign(msg)
@@ -49,9 +63,9 @@ hslcifiQY8173nHtaB3R6T0PwRQTwKbpdec0dwVCpvVcdzHtivndlG0mqQ==
 )
 
 func TestPrivatePem(t *testing.T) {
-	signer, err := crypto.NewSm2(
-		crypto.ParseSm2PrivateKey([]byte(privPem), []byte{}),
-		crypto.ParseSm2PublicKey([]byte(pubPem)))
+	signer, err := New(
+		WithSm2PrivateKey([]byte(privPem), []byte{}),
+		WithSm2PublicKey([]byte(pubPem)))
 
 	t.Log(signer, err)
 	if err != nil {
@@ -67,9 +81,9 @@ func TestPrivatePem(t *testing.T) {
 }
 
 func TestBadPublicPem(t *testing.T) {
-	signer, err := crypto.NewSm2(
-		crypto.ParseSm2PrivateKey([]byte(privPem), []byte{}),
-		crypto.ParseSm2PublicKey([]byte(badPubPem)))
+	signer, err := New(
+		WithSm2PrivateKey([]byte(privPem), []byte{}),
+		WithSm2PublicKey([]byte(badPubPem)))
 
 	t.Log(signer, err)
 

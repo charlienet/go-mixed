@@ -1,5 +1,8 @@
 package locker
 
+var _ RWLocker = &emptyLocker{}
+var _ Locker = &emptyLocker{}
+
 var EmptyLocker = &emptyLocker{}
 
 type emptyLocker struct{}

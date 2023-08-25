@@ -1,6 +1,8 @@
 package collections
 
-import "sync"
+import (
+	"sync"
+)
 
 var _ Queue[string] = &ArrayQueue[string]{}
 

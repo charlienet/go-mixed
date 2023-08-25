@@ -1,4 +1,4 @@
-package cache
+package bigcache
 
 import (
 	"errors"
@@ -7,8 +7,6 @@ import (
 	"github.com/allegro/bigcache/v3"
 	"github.com/charlienet/go-mixed/logx"
 )
-
-var _ MemCache = &bigCacheClient{}
 
 type BigCacheConfig struct {
 	Shards             int
@@ -49,8 +47,13 @@ func NewBigCache(c BigCacheConfig) (*bigCacheClient, error) {
 	}, nil
 }
 
-func (c *bigCacheClient) Get(key string) ([]byte, error) {
-	return c.cache.Get(key)
+func (c *bigCacheClient) Get(key string) ([]byte, bool) {
+	b, err := c.cache.Get(key)
+	if err == nil {
+		return b, false
+	}
+
+	return b, true
 }
 
 func (c *bigCacheClient) Set(key string, entry []byte, expire time.Duration) error {
@@ -68,9 +71,23 @@ func (c *bigCacheClient) Delete(keys ...string) error {
 	return nil
 }
 
-func (c *bigCacheClient) Exist(key string) {
+func (c *bigCacheClient) Exist(key string) bool {
+	_, err := c.cache.Get(key)
+	if err == nil {
+		return true
+	}
+
+	return !errors.Is(err, bigcache.ErrEntryNotFound)
+}
+
+func (c *bigCacheClient) Clear() {
+
 }
 
 func (c *bigCacheClient) IsNotFound(err error) bool {
-	return errors.Is(err, bigcache.ErrEntryNotFound)
+	if err == nil {
+		return true
+	}
+
+	return !errors.Is(err, bigcache.ErrEntryNotFound)
 }

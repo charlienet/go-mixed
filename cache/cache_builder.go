@@ -1,8 +1,16 @@
 package cache
 
-import "github.com/charlienet/go-mixed/logx"
+import (
+	"context"
+	"time"
+
+	"github.com/charlienet/go-mixed/cache/bigcache"
+	"github.com/charlienet/go-mixed/cache/freecache"
+	"github.com/charlienet/go-mixed/logx"
+)
 
 const defaultPrefix = "cache"
+
 
 type option func(*Cache) error
 
@@ -10,90 +18,64 @@ type options struct {
 	Prefix string
 }
 
-func acquireDefaultCache() *Cache {
-	return &Cache{
-		prefix: defaultPrefix,
-		qps:    NewQps(),
+func WithRedis(opts RedisConfig) option {
+	return func(c *Cache) error {
+		if len(opts.Prefix) == 0 {
+			opts.Prefix = defaultPrefix
+		}
+
+		rds := NewRedis(opts)
+
+		c.rds = rds
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		defer cancel()
+		return rds.Ping(ctx)
 	}
 }
 
-type cacheBuilder struct {
-	prefix           string
-	redisOptions     RedisConfig
-	bigCacheConfig   BigCacheConfig
-	freeSize         int
-	publishSubscribe PublishSubscribe
-	log              logx.Logger
+func WithBigCache(opts bigcache.BigCacheConfig) option {
+	return func(c *Cache) error {
+		mem, err := bigcache.NewBigCache(opts)
+
+		c.mem = mem
+		return err
+	}
 }
 
-func NewCacheBuilder() *cacheBuilder {
-	return &cacheBuilder{}
-}
+func WithFreeCache(size int) option {
+	return func(c *Cache) error {
+		mem := freecache.NewFreeCache(size)
+		c.mem = mem
 
-func (b *cacheBuilder) WithLogger(log logx.Logger) *cacheBuilder {
-	b.log = log
-	return b
-}
-
-func (b *cacheBuilder) WithPrefix(prefix string) *cacheBuilder {
-	b.prefix = prefix
-	return b
-}
-
-func (b *cacheBuilder) WithRedis(opts RedisConfig) *cacheBuilder {
-	b.redisOptions = opts
-	return b
-}
-
-func (b *cacheBuilder) WithBigCache(opts BigCacheConfig) *cacheBuilder {
-	b.bigCacheConfig = opts
-	return b
-}
-
-func (b *cacheBuilder) WithFreeCache(size int) *cacheBuilder {
-	b.freeSize = size
-	return b
+		return nil
+	}
 }
 
 // 使用自定义分布式缓存
-func WithDistributedCache(c DistributdCache) {
-
+func WithDistributedCache(rds DistributedCache) option {
+	return func(c *Cache) error {
+		c.rds = rds
+		return nil
+	}
 }
 
-func (b *cacheBuilder) WithPublishSubscribe(p PublishSubscribe) *cacheBuilder {
-	b.publishSubscribe = p
-	return b
+func WithPublishSubscribe(p PublishSubscribe) option {
+	return func(c *Cache) error {
+		return nil
+	}
 }
 
-func (b cacheBuilder) Build() (*Cache, error) {
-	var err error
-	cache := acquireDefaultCache()
-	if len(b.prefix) > 0 {
-		cache.prefix = b.prefix
+func WithLogger(log logx.Logger) option {
+	return func(c *Cache) error {
+		c.logger = log
+
+		return nil
 	}
+}
 
-	b.redisOptions.Prefix = cache.prefix
-
-	redis := NewRedis(b.redisOptions)
-	if err := redis.Ping(); err != nil {
-		return cache, err
+func acquireDefaultCache() *Cache {
+	return &Cache{
+		qps: NewQps(),
 	}
-
-	var mem MemCache
-	if b.freeSize > 0 {
-		mem = NewFreeCache(b.freeSize)
-	} else {
-		if b.log != nil {
-			b.bigCacheConfig.log = b.log
-		}
-
-		mem, err = NewBigCache(b.bigCacheConfig)
-	}
-
-	cache.distributdCache = redis
-	cache.mem = mem
-	cache.publishSubscribe = b.publishSubscribe
-	cache.logger = b.log
-
-	return cache, err
 }

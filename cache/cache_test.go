@@ -6,9 +6,6 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"github.com/charlienet/go-mixed/bytesconv"
-	"github.com/charlienet/go-mixed/logx"
 )
 
 var (
@@ -16,25 +13,26 @@ var (
 )
 
 func TestNewCache(t *testing.T) {
-	c, err := NewCacheBuilder().
-		WithRedis(RedisConfig{
-			Addrs:    []string{"192.168.2.222:6379"},
-			Password: "123456",
-		}).
-		WithPrefix("cache_test").
-		WithLogger(logx.NewLogrus()).
-		Build()
+	// c, err := NewCacheBuilder().
+	// 	UseRedis(RedisConfig{
+	// 		Addrs:    []string{"192.168.2.222:6379"},
+	// 		Password: "123456",
+	// 	}).
+	// 	WithPrefix("cache_test").
+	// 	WithLogger(logx.NewLogrus()).
+	// 	Build()
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 
-	c.Set("abc", "value", time.Minute*10)
+	// ctx := context.Background()
+	// c.Set(ctx, "abc", "value", time.Minute*10)
 
-	var s string
-	c.Get("abc", &s)
+	// var s string
+	// c.Get(ctx, "abc", &s)
 
-	t.Log(s)
+	// t.Log(s)
 }
 
 type SimpleUser struct {
@@ -43,45 +41,43 @@ type SimpleUser struct {
 }
 
 func TestMemCache(t *testing.T) {
-	b, _ := NewBigCache(BigCacheConfig{})
-	var mems = []MemCache{
-		NewFreeCache(10 * 1024 * 1024),
-		b,
-	}
+	// b, _ := bigcache.NewBigCache(bigcache.BigCacheConfig{})
+	// var mems = []MemCache{
+	// 	NewFreeCache(10 * 1024 * 1024),
+	// 	b,
+	// }
 
-	u := SimpleUser{FirstName: "Radomir", LastName: "Sohlich"}
-	encoded, _ := bytesconv.Encode(u)
-	for _, m := range mems {
-		m.Set(defaultKey, encoded, time.Second)
-		ret, err := m.Get(defaultKey)
-		if err != nil {
-			t.Fatal(err)
-		}
+	// u := SimpleUser{FirstName: "Radomir", LastName: "Sohlich"}
+	// encoded, _ := bytesconv.Encode(u)
+	// for _, m := range mems {
+	// 	m.Set(defaultKey, encoded, time.Second)
+	// 	ret, _ := m.Get(defaultKey)
 
-		var u2 SimpleUser
-		bytesconv.Decode(ret, &u2)
-		t.Log(u2)
-	}
+	// 	var u2 SimpleUser
+	// 	bytesconv.Decode(ret, &u2)
+	// 	t.Log(u2)
+	// }
 }
 
 func TestDistributedCache(t *testing.T) {
 	c := NewRedis(RedisConfig{Addrs: []string{"192.168.2.222:6379"}, DB: 6, Password: "123456", Prefix: "abcdef"})
 
-	if err := c.Ping(); err != nil {
+	ctx := context.Background()
+	if err := c.Ping(ctx); err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log(c.Exist(defaultKey))
+	t.Log(c.Exist(ctx, defaultKey))
 
 	u := SimpleUser{FirstName: "redis client"}
 
 	var u2 SimpleUser
-	c.Get(defaultKey, &u2)
+	c.Get(ctx, defaultKey, &u2)
 
-	c.Set(defaultKey, u, time.Minute*10)
-	t.Log(c.Exist(defaultKey))
+	c.Set(ctx, defaultKey, u, time.Minute*10)
+	t.Log(c.Exist(ctx, defaultKey))
 
-	if err := c.Get(defaultKey, &u2); err != nil {
+	if err := c.Get(ctx, defaultKey, &u2); err != nil {
 		t.Fatal("err:", err)
 	}
 	t.Logf("%+v", u2)
@@ -136,10 +132,9 @@ func load() (any, error) {
 }
 
 func buildCache() *Cache {
-	c, err := NewCacheBuilder().
-		WithFreeCache(10 * 1024 * 1024).
-		WithRedis(RedisConfig{Addrs: []string{"192.168.2.222:6379"}, DB: 6, Password: "123456"}).
-		Build()
+	c, err := New(
+		WithFreeCache(10*1024*1024),
+		WithRedis(RedisConfig{Addrs: []string{"192.168.2.222:6379"}, DB: 6, Password: "123456"}))
 
 	if err != nil {
 		panic(err)

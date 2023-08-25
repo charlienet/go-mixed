@@ -1,9 +1,5 @@
 package list
 
-import (
-	"github.com/charlienet/go-mixed/locker"
-)
-
 type LinkedList[T any] struct {
 	list[T]
 	front, tail *LinkedNode[T]
@@ -16,9 +12,7 @@ type LinkedNode[T any] struct {
 
 // NewLinkedList 初始化链表
 func NewLinkedList[T any](elems ...T) *LinkedList[T] {
-	l := &LinkedList[T]{
-		list: list[T]{locker: locker.EmptyLocker},
-	}
+	l := &LinkedList[T]{}
 
 	for _, e := range elems {
 		l.pushBackNode(&LinkedNode[T]{Value: e})
@@ -28,8 +22,8 @@ func NewLinkedList[T any](elems ...T) *LinkedList[T] {
 }
 
 func (l *LinkedList[T]) PushBack(v T) *LinkedList[T] {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	l.pushBackNode(&LinkedNode[T]{Value: v})
 
@@ -37,8 +31,8 @@ func (l *LinkedList[T]) PushBack(v T) *LinkedList[T] {
 }
 
 func (l *LinkedList[T]) PushFront(v T) *LinkedList[T] {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	l.pushFrontNode(&LinkedNode[T]{Value: v})
 
@@ -65,8 +59,8 @@ func (l *LinkedList[T]) Back() T {
 }
 
 func (l *LinkedList[T]) ForEach(fn func(T) bool) {
-	l.locker.RLock()
-	defer l.locker.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	for current := l.front; current != nil; current = current.Next {
 		if fn(current.Value) {
@@ -77,12 +71,10 @@ func (l *LinkedList[T]) ForEach(fn func(T) bool) {
 
 func (l *LinkedList[T]) GetAt(i int) T {
 	if i <= l.Size() {
-		var n int
-		for current := l.front; current != nil; current = current.Next {
+		for n, current := 0, l.front; current != nil; current, n = current.Next, n+1 {
 			if n == i {
 				return current.Value
 			}
-			n++
 		}
 	}
 
@@ -90,8 +82,8 @@ func (l *LinkedList[T]) GetAt(i int) T {
 }
 
 func (l *LinkedList[T]) Remove(n *LinkedNode[T]) {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	if n.Next != nil {
 		n.Next.Prev = n.Prev
@@ -112,8 +104,8 @@ func (l *LinkedList[T]) Remove(n *LinkedNode[T]) {
 }
 
 func (l *LinkedList[T]) RemoveAt(index int) {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	var i int
 	for current := l.front; current != nil; current = current.Next {

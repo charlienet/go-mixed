@@ -1,8 +1,10 @@
 package sets
 
 import (
+	"slices"
+
+	"github.com/charlienet/go-mixed/expr"
 	"golang.org/x/exp/constraints"
-	"golang.org/x/exp/slices"
 )
 
 type sorted_set[T constraints.Ordered] struct {
@@ -50,8 +52,12 @@ func (s *sorted_set[T]) Asc() Set[T] {
 
 func (s *sorted_set[T]) Desc() Set[T] {
 	keys := s.sorted
-	slices.SortFunc(keys, func(a, b T) bool {
-		return a > b
+	slices.SortFunc(keys, func(a, b T) int {
+		if a == b {
+			return 0
+		}
+
+		return expr.Ternary(a > b, -1, 1)
 	})
 
 	return &sorted_set[T]{

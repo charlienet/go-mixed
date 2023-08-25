@@ -7,6 +7,8 @@ import (
 	"github.com/vmihailenco/go-tinylfu"
 )
 
+var _ MemCache = &TinyLFU{}
+
 type TinyLFU struct {
 	mu  locker.Locker
 	lfu *tinylfu.T
@@ -21,15 +23,17 @@ func NewTinyLFU(size int, ttl time.Duration) *TinyLFU {
 	}
 }
 
-func (c *TinyLFU) Set(key string, b []byte, expire time.Duration) {
+func (c *TinyLFU) Set(key string, b []byte, expire time.Duration) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.lfu.Set(&tinylfu.Item{
-		Key:   key,
-		Value: b,
+		Key:      key,
+		Value:    b,
 		ExpireAt: time.Now().Add(c.ttl),
 	})
+
+	return nil
 }
 
 func (c *TinyLFU) Get(key string) ([]byte, bool) {
@@ -44,9 +48,17 @@ func (c *TinyLFU) Get(key string) ([]byte, bool) {
 	return val.([]byte), true
 }
 
-func (c *TinyLFU) Del(key string) {
+func (c *TinyLFU) Delete(keys ...string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.lfu.Del(key)
+	for _, k := range keys {
+		c.lfu.Del(k)
+	}
+
+	return nil
+}
+
+func (c *TinyLFU) Clear() {
+
 }

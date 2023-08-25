@@ -54,7 +54,7 @@ func NewRedis(c RedisConfig) *redisClient {
 	}
 }
 
-func (c *redisClient) Get(key string, out any) error {
+func (c *redisClient) Get(cxt context.Context, key string, out any) error {
 	val, err := c.client.Get(context.Background(), c.getKey(key)).Result()
 	if errors.Is(err, redis.Nil) {
 		return ErrNotFound
@@ -72,23 +72,23 @@ func (c *redisClient) Get(key string, out any) error {
 	return json.Unmarshal(bytesconv.StringToBytes(val), out)
 }
 
-func (c *redisClient) Set(key string, value any, expiration time.Duration) error {
+func (c *redisClient) Set(ctx context.Context, key string, value any, expiration time.Duration) error {
 	j, _ := json.Marshal(value)
 	return c.client.Set(context.Background(), c.getKey(key), j, expiration).Err()
 }
 
-func (c *redisClient) Exist(key string) (bool, error) {
+func (c *redisClient) Exist(ctx context.Context, key string) (bool, error) {
 	val, err := c.client.Exists(context.Background(), c.getKey(key)).Result()
 	return val > 0, err
 }
 
-func (c *redisClient) Delete(key ...string) error {
+func (c *redisClient) Delete(ctx context.Context, key ...string) error {
 	keys := make([]string, 0, len(key))
 	for _, k := range key {
 		keys = append(keys, c.getKey(k))
 	}
 
-	_ , err := c.client.Del(context.Background(), keys...).Result()
+	_, err := c.client.Del(context.Background(), keys...).Result()
 	if err != nil {
 		return err
 	}
@@ -96,8 +96,8 @@ func (c *redisClient) Delete(key ...string) error {
 	return nil
 }
 
-func (c *redisClient) Ping() error {
-	_, err := c.client.Ping(context.Background()).Result()
+func (c *redisClient) Ping(ctx context.Context) error {
+	_, err := c.client.Ping(ctx).Result()
 	return err
 }
 

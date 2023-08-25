@@ -28,6 +28,7 @@ type option struct {
 type setFunc func(option)
 
 func WithSync() setFunc {
+
 	return func(o option) {
 		o.locker = &sync.RWMutex{}
 	}

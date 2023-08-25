@@ -1,9 +1,5 @@
 package list
 
-import (
-	"github.com/charlienet/go-mixed/locker"
-)
-
 const minCapacity = 16
 
 type ArrayList[T any] struct {
@@ -31,7 +27,7 @@ func NewArrayList[T any](elems ...T) *ArrayList[T] {
 	}
 
 	l := &ArrayList[T]{
-		list:   list[T]{size: size, locker: locker.EmptyLocker},
+		list:   list[T]{size: size},
 		buf:    buf,
 		tail:   tail,
 		minCap: minCap,
@@ -45,8 +41,8 @@ func NewArrayList[T any](elems ...T) *ArrayList[T] {
 }
 
 func (l *ArrayList[T]) PushFront(v T) {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	l.grow()
 
@@ -56,8 +52,8 @@ func (l *ArrayList[T]) PushFront(v T) {
 }
 
 func (l *ArrayList[T]) PushBack(v T) {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	l.grow()
 
@@ -68,8 +64,8 @@ func (l *ArrayList[T]) PushBack(v T) {
 }
 
 func (l *ArrayList[T]) PopFront() T {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	if l.size <= 0 {
 		panic("list: PopFront() called on empty list")
@@ -86,8 +82,8 @@ func (l *ArrayList[T]) PopFront() T {
 }
 
 func (l *ArrayList[T]) PopBack() T {
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	l.tail = l.prev(l.tail)
 
@@ -105,8 +101,8 @@ func (l *ArrayList[T]) RemoveAt(at int) T {
 		panic(ErrorOutOffRange)
 	}
 
-	l.locker.Lock()
-	defer l.locker.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	rm := (l.head + at) & (len(l.buf) - 1)
 	if at*2 < l.size {
@@ -127,22 +123,22 @@ func (l *ArrayList[T]) RemoveAt(at int) T {
 }
 
 func (l *ArrayList[T]) Front() T {
-	l.locker.RLock()
-	defer l.locker.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	return l.buf[l.head]
 }
 
 func (l *ArrayList[T]) Back() T {
-	l.locker.RLock()
-	defer l.locker.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	return l.buf[l.tail]
 }
 
 func (l *ArrayList[T]) ForEach(fn func(T)) {
-	l.locker.RLock()
-	defer l.locker.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	n := l.head
 	for i := 0; i < l.size; i++ {

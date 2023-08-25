@@ -4,7 +4,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/charlienet/go-mixed/fs"
 	"github.com/sirupsen/logrus"
@@ -61,6 +60,12 @@ func WithOptions(o LogrusOptions) logrusOption {
 	}
 }
 
+func WithNestedFormatter(o NestedFormatterOption) logrusOption {
+	return func(logrusLogger *logrus.Logger) {
+		logrusLogger.Formatter = NewNestedFormatter(o)
+	}
+}
+
 func WithFormatter(formatter logrus.Formatter) logrusOption {
 	return func(logrusLogger *logrus.Logger) {
 		logrusLogger.SetFormatter(formatter)
@@ -68,7 +73,6 @@ func WithFormatter(formatter logrus.Formatter) logrusOption {
 }
 
 func WithOutput(options LogrusOutputOptions) logrusOption {
-	_ = time.Now()
 	return func(l *logrus.Logger) {
 		var writer io.Writer
 		switch {

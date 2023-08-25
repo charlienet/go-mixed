@@ -16,8 +16,8 @@ const (
 )
 
 var (
-	globalError = errors.Error(defaultErrorCode, "全局错误对象")
-	errorbyCode = errors.Error(testCode, "全局错误对象")
+	globalError = errors.ErrorWithCode(defaultErrorCode, "全局错误对象")
+	errorbyCode = errors.ErrorWithCode(testCode, "全局错误对象")
 )
 
 func TestPersetError(t *testing.T) {
@@ -40,7 +40,7 @@ func TestWithMessage(t *testing.T) {
 }
 
 func TestNewError(t *testing.T) {
-	var e error = errors.Error("123456", "测试")
+	var e error = errors.ErrorWithCode("123456", "测试")
 
 	err := e.(*errors.CodeError)
 	t.Log(e, err.Code())
@@ -58,17 +58,17 @@ func TestWithStack(t *testing.T) {
 }
 
 func TestLogMessage(t *testing.T) {
-	t.Logf("%+v", errors.Error("88888", "错误消息"))
-	t.Log(errors.Error("77777"))
-	t.Log(errors.Error("77777", "测试"))
+	t.Logf("%+v", errors.ErrorWithCode("88888", "错误消息"))
+	t.Log(errors.ErrorWithCode("77777"))
+	t.Log(errors.ErrorWithCode("77777", "测试"))
 }
 
 func TestIs(t *testing.T) {
 	code1 := "000090"
 	code2 := "000091"
-	e1 := errors.Error(code1)
-	e2 := errors.Error(code1)
-	e3 := errors.Error(code2)
+	e1 := errors.ErrorWithCode(code1)
+	e2 := errors.ErrorWithCode(code1)
+	e3 := errors.ErrorWithCode(code2)
 
 	t.Log(errors.Is(e1, e2))
 	t.Log(errors.Is(e1, e3))

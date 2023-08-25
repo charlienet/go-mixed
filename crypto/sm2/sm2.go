@@ -1,4 +1,4 @@
-package crypto
+package sm2
 
 import (
 	"crypto/rand"
@@ -14,7 +14,7 @@ var (
 	C1C2C3      = 1
 )
 
-var _ IAsymmetric = &sm2Instance{}
+type option func(*sm2Instance) error
 
 type sm2Instance struct {
 	mode int
@@ -22,9 +22,42 @@ type sm2Instance struct {
 	puk  *s.PublicKey
 }
 
-type option func(*sm2Instance) error
+func WithSm2PrivateKey(p []byte, pwd []byte) option {
+	return func(so *sm2Instance) error {
+		priv, err := x.ReadPrivateKeyFromPem(p, pwd)
+		if err != nil {
+			return err
+		}
 
-func NewSm2(opts ...option) (*sm2Instance, error) {
+		so.prk = priv
+		return nil
+	}
+}
+
+func WithSm2PublicKey(p []byte) option {
+	return func(so *sm2Instance) error {
+		if len(p) == 0 {
+			return nil
+		}
+
+		pub, err := x.ReadPublicKeyFromPem(p)
+		if err != nil {
+			return err
+		}
+
+		so.puk = pub
+		return nil
+	}
+}
+
+func WithMode(mode int) option {
+	return func(so *sm2Instance) error {
+		so.mode = mode
+		return nil
+	}
+}
+
+func New(opts ...option) (*sm2Instance, error) {
 	o := &sm2Instance{
 		mode: defaultMode,
 	}
@@ -49,37 +82,6 @@ func NewSm2(opts ...option) (*sm2Instance, error) {
 	}
 
 	return o, nil
-}
-
-func ParseSm2PrivateKey(p []byte, pwd []byte) option {
-	return func(so *sm2Instance) error {
-		priv, err := x.ReadPrivateKeyFromPem(p, pwd)
-		if err != nil {
-			return err
-		}
-
-		so.prk = priv
-		return nil
-	}
-}
-
-func ParseSm2PublicKey(p []byte) option {
-	return func(so *sm2Instance) error {
-		pub, err := x.ReadPublicKeyFromPem(p)
-		if err != nil {
-			return err
-		}
-
-		so.puk = pub
-		return nil
-	}
-}
-
-func WithMode(mode int) option {
-	return func(so *sm2Instance) error {
-		so.mode = mode
-		return nil
-	}
 }
 
 func (o *sm2Instance) Encrypt(msg []byte) ([]byte, error) {

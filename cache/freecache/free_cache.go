@@ -1,4 +1,4 @@
-package cache
+package freecache
 
 import (
 	"errors"
@@ -9,8 +9,6 @@ import (
 )
 
 const defaultSize = 10 * 1024 * 1024 // 10M
-
-var _ MemCache = &freeCache{}
 
 type freeCache struct {
 	cache *freecache.Cache
@@ -29,8 +27,12 @@ func NewFreeCache(size int) *freeCache {
 	}
 }
 
-func (c *freeCache) Get(key string) ([]byte, error) {
-	return c.cache.Get([]byte(key))
+func (c *freeCache) Get(key string) ([]byte, bool) {
+	b, err := c.cache.Get([]byte(key))
+	if err != nil {
+		return b, false
+	}
+	return b, true
 }
 
 func (c *freeCache) Set(key string, value []byte, d time.Duration) error {
@@ -52,6 +54,10 @@ func (c *freeCache) Delete(keys ...string) error {
 
 func (c *freeCache) Exist(key string) error {
 	return nil
+}
+
+func (c *freeCache) Clear() {
+
 }
 
 func (c *freeCache) IsNotFound(err error) bool {

@@ -14,6 +14,14 @@
 
 ## 使用方式
 
+创建
+
+```go
+cache.New().UseRedis().UseBigCache().Build()
+
+```
+
 ```go
 Cache.Get(key, dist, func() (bool,error){}, options func(){})
+Cache.GetFn(context, key, dist, func() (bool, error))
 ```

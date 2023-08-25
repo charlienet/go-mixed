@@ -12,12 +12,12 @@ type List[T any] interface {
 }
 
 type list[T any] struct {
-	size   int
-	locker locker.RWLocker
+	size int
+	mu   locker.WithRWLocker
 }
 
 func (l *list[T]) Synchronize() {
-	l.locker = locker.NewRWLocker()
+	l.mu.Synchronize()
 }
 
 func (l *list[T]) ForEach(fn func(T) bool) { panic("Not Implemented") }

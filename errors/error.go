@@ -12,6 +12,17 @@ const (
 	defaultErrorCode = "999999"
 )
 
+type Error interface {
+	Wraped() []error
+	Code() string
+
+	error
+
+	private()
+}
+
+var _ Error = &CodeError{}
+
 type CodeError struct {
 	cause   error  // 原始错误信息
 	code    string // 错误码
@@ -70,6 +81,10 @@ func (e *CodeError) WithCause(err error) *CodeError {
 	return new(err, e.code, e.message)
 }
 
+func (e *CodeError) Wraped() []error {
+	return []error{}
+}
+
 func (e *CodeError) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
@@ -85,6 +100,8 @@ func (e *CodeError) Format(s fmt.State, verb rune) {
 		io.WriteString(s, e.Error())
 	}
 }
+
+func (*CodeError) private() {}
 
 func new(err error, code string, args ...any) *CodeError {
 	return &CodeError{
@@ -102,7 +119,7 @@ func newf(err error, code string, format string, args ...any) *CodeError {
 	}
 }
 
-func Error(code string, args ...any) *CodeError {
+func ErrorWithCode(code string, args ...any) *CodeError {
 	return new(nil, code, args...)
 }
 

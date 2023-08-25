@@ -3,8 +3,9 @@ package maps
 import (
 	"fmt"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
+	"github.com/charlienet/go-mixed/expr"
 	xmaps "golang.org/x/exp/maps"
 )
 
@@ -124,8 +125,12 @@ func (m *sorted_map[K, V]) Asc() SortedMap[K, V] {
 func (m *sorted_map[K, V]) Desc() SortedMap[K, V] {
 	keys := m.keys
 
-	slices.SortFunc(keys, func(a, b K) bool {
-		return a > b
+	slices.SortFunc(keys, func(a, b K) int {
+		if a == b {
+			return 0
+		}
+
+		return expr.Ternary(a > b, -1, 1)
 	})
 
 	return &sorted_map[K, V]{

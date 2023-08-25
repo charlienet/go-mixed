@@ -9,3 +9,16 @@ func ParseDuration(s string) (time.Duration, error) {
 
 	return time.ParseDuration(s)
 }
+
+func ParseDurationDefault(s string, d time.Duration) time.Duration {
+	if len(s) == 0 {
+		return d
+	}
+
+	ret, err := time.ParseDuration(s)
+	if err != nil {
+		return d
+	}
+
+	return ret
+}

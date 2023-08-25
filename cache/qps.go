@@ -31,7 +31,9 @@ func (q *qps) statisticsTotal() {
 		}
 	}()
 
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
 	for range ticker.C {
 		q.all.viewTotal = atomic.SwapInt64(&q.all.total, 0)
 		q.memoryTotal.viewTotal = atomic.SwapInt64(&q.memoryTotal.total, 0)
@@ -39,5 +41,7 @@ func (q *qps) statisticsTotal() {
 		q.redisTotal.viewTotal = atomic.SwapInt64(&q.redisTotal.total, 0)
 		q.redisHit.viewTotal = atomic.SwapInt64(&q.redisHit.total, 0)
 		q.sourceTotal.viewTotal = atomic.SwapInt64(&q.sourceTotal.total, 0)
+
+		// percnt := 0
 	}
 }
