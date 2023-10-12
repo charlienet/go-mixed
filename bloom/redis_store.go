@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/charlienet/go-mixed/redis"
 )
 
 const (
@@ -38,12 +38,12 @@ var _ bitStore = &redisBitSet{}
 
 // 使用Redis存储位图
 type redisBitSet struct {
-	store *redis.Client
+	store redis.Client
 	key   string
 	bits  uint
 }
 
-func newRedisStore(store *redis.Client, key string, bits uint) *redisBitSet {
+func newRedisStore(store redis.Client, key string, bits uint) *redisBitSet {
 	return &redisBitSet{
 		store: store,
 		key:   key,

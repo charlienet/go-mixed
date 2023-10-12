@@ -6,7 +6,7 @@ import (
 	"github.com/charlienet/go-mixed/bytesconv"
 	"github.com/charlienet/go-mixed/expr"
 	"github.com/charlienet/go-mixed/hash"
-	"github.com/go-redis/redis/v8"
+	"github.com/charlienet/go-mixed/redis"
 )
 
 const DEFAULT_SIZE = 2 << 24
@@ -26,13 +26,13 @@ type BloomFilter struct {
 }
 
 type bloomOptions struct {
-	redisClient *redis.Client
+	redisClient redis.Client
 	redisKey    string
 }
 
 type option func(*bloomOptions)
 
-func WithRedis(redis *redis.Client, key string) option {
+func WithRedis(redis redis.Client, key string) option {
 	return func(bo *bloomOptions) {
 		bo.redisClient = redis
 		bo.redisKey = key

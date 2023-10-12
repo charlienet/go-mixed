@@ -9,7 +9,7 @@ import (
 	"github.com/charlienet/go-mixed/bloom"
 	"github.com/charlienet/go-mixed/rand"
 	"github.com/charlienet/go-mixed/sys"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
 
