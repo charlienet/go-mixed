@@ -16,6 +16,8 @@ const (
 	defaultSlowThreshold = time.Millisecond * 100 // 慢查询
 )
 
+var Nil = redis.Nil
+
 var (
 	once sync.Once
 )
@@ -43,7 +45,7 @@ type ReidsOption struct {
 	ConnMaxLifetime time.Duration
 }
 
-type Client struct {
+type Client interface {
 	redis.UniversalClient
 }
 
@@ -79,5 +81,5 @@ func New(opt *ReidsOption) Client {
 		}
 	})
 
-	return Client{UniversalClient: rdb}
+	return rdb
 }

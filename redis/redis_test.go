@@ -145,7 +145,7 @@ func runOnRedis(t *testing.T, fn func(client Client)) {
 func CreateMiniRedis() (r Client, clean func(), err error) {
 	mr, err := miniredis.Run()
 	if err != nil {
-		return Client{}, nil, err
+		return nil, nil, err
 	}
 
 	addr := mr.Addr()
