@@ -28,6 +28,10 @@ type ReidsOption struct {
 	Prefix    string
 	Separator string
 
+	// Database to be selected after connecting to the server.
+	// Only single-node and failover clients.
+	DB int
+
 	MaxRetries      int
 	MinRetryBackoff time.Duration
 	MaxRetryBackoff time.Duration
@@ -55,6 +59,8 @@ func New(opt *ReidsOption) Client {
 		rdb = redis.NewUniversalClient(&redis.UniversalOptions{
 			Addrs:    opt.Addrs,
 			Password: opt.Password,
+
+			DB: opt.DB,
 
 			MaxRetries:      opt.MaxRetries,
 			MinRetryBackoff: opt.MinRetryBackoff,
