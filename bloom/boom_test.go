@@ -8,8 +8,8 @@ import (
 
 	"github.com/charlienet/go-mixed/bloom"
 	"github.com/charlienet/go-mixed/rand"
+	"github.com/charlienet/go-mixed/redis"
 	"github.com/charlienet/go-mixed/sys"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,8 +49,9 @@ func TestOptimize(t *testing.T) {
 }
 
 func TestRedis(t *testing.T) {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "192.168.2.222:6379",
+
+	client := redis.New(&redis.ReidsOption{
+		Addrs:    []string{"192.168.2.222:6379"},
 		Password: "123456",
 	})
 
