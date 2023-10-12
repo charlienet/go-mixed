@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -21,6 +21,10 @@ type Redis struct {
 	addr      string // 服务器地址
 	prefix    string // 键值前缀
 	separator string // 分隔符
+}
+
+type Subscriber struct {
+	*redis.PubSub
 }
 
 func New(addr string, opts ...Option) *Redis {
@@ -72,6 +76,29 @@ func (s *Redis) Del(ctx context.Context, key ...string) (int, error) {
 	}
 
 	return int(v), err
+}
+
+func (s *Redis) Subscribe(ctx context.Context, channel string) Subscriber {
+	conn, err := s.getRedis()
+	if err != nil {
+		return Subscriber{}
+	}
+
+	sub := conn.Subscribe(context.Background(), channel)
+
+	return Subscriber{sub}
+}
+
+func (s *Redis) Publish(ctx context.Context, channel, msg string) *redis.IntCmd {
+
+	conn, err := s.getRedis()
+	if err != nil {
+		return &redis.IntCmd{}
+	}
+
+	cmd := conn.Publish(ctx, channel, msg)
+
+	return cmd
 }
 
 func (s *Redis) getRedis() (redis.UniversalClient, error) {
