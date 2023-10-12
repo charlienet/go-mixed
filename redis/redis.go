@@ -1,9 +1,10 @@
 package redis
 
 import (
-	"context"
+	"sync"
 	"time"
 
+	"github.com/charlienet/go-mixed/expr"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -15,118 +16,68 @@ const (
 	defaultSlowThreshold = time.Millisecond * 100 // 慢查询
 )
 
-type Option func(r *Redis)
+var (
+	once sync.Once
+)
 
-type Redis struct {
-	addr      string // 服务器地址
-	prefix    string // 键值前缀
-	separator string // 分隔符
+type ReidsOption struct {
+	Addrs     []string
+	Password  string // 密码
+	Prefix    string
+	Separator string
+
+	MaxRetries      int
+	MinRetryBackoff time.Duration
+	MaxRetryBackoff time.Duration
+
+	DialTimeout           time.Duration
+	ReadTimeout           time.Duration
+	WriteTimeout          time.Duration
+	ContextTimeoutEnabled bool
+
+	PoolSize        int
+	PoolTimeout     time.Duration
+	MinIdleConns    int
+	MaxIdleConns    int
+	ConnMaxIdleTime time.Duration
+	ConnMaxLifetime time.Duration
 }
 
-type Subscriber struct {
-	*redis.PubSub
+type Client struct {
+	redis.UniversalClient
 }
 
-func New(addr string, opts ...Option) *Redis {
-	r := &Redis{
-		addr: addr,
-	}
+func New(opt *ReidsOption) Client {
+	var rdb redis.UniversalClient
+	once.Do(func() {
+		rdb = redis.NewUniversalClient(&redis.UniversalOptions{
+			Addrs:    opt.Addrs,
+			Password: opt.Password,
 
-	return r
-}
+			MaxRetries:      opt.MaxRetries,
+			MinRetryBackoff: opt.MinRetryBackoff,
+			MaxRetryBackoff: opt.MaxRetryBackoff,
 
-func (s *Redis) Set(ctx context.Context, key, value string) error {
-	conn, err := s.getRedis()
-	if err != nil {
-		return err
-	}
+			DialTimeout:           opt.DialTimeout,
+			ReadTimeout:           opt.ReadTimeout,
+			WriteTimeout:          opt.WriteTimeout,
+			ContextTimeoutEnabled: opt.ContextTimeoutEnabled,
 
-	return conn.Set(ctx, s.formatKey(key), value, 0).Err()
-}
+			PoolSize:        opt.PoolSize,
+			PoolTimeout:     opt.PoolTimeout,
+			MinIdleConns:    opt.MinIdleConns,
+			MaxIdleConns:    opt.MaxIdleConns,
+			ConnMaxIdleTime: opt.ConnMaxIdleTime,
+			ConnMaxLifetime: opt.ConnMaxLifetime,
+		})
 
-func (s *Redis) Get(ctx context.Context, key string) (string, error) {
-	conn, err := s.getRedis()
-	if err != nil {
-		return "", err
-	}
-
-	return conn.Get(ctx, s.formatKey(key)).Result()
-}
-
-func (s *Redis) GetSet(ctx context.Context, key, value string) (string, error) {
-	conn, err := s.getRedis()
-	if err != nil {
-		return "", err
-	}
-
-	val, err := conn.GetSet(ctx, s.formatKey(key), value).Result()
-	return val, err
-}
-
-func (s *Redis) Del(ctx context.Context, key ...string) (int, error) {
-	conn, err := s.getRedis()
-	if err != nil {
-		return 0, err
-	}
-
-	keys := s.formatKeys(key...)
-	v, err := conn.Del(ctx, keys...).Result()
-	if err != nil {
-		return 0, err
-	}
-
-	return int(v), err
-}
-
-func (s *Redis) Subscribe(ctx context.Context, channel string) Subscriber {
-	conn, err := s.getRedis()
-	if err != nil {
-		return Subscriber{}
-	}
-
-	sub := conn.Subscribe(context.Background(), channel)
-
-	return Subscriber{sub}
-}
-
-func (s *Redis) Publish(ctx context.Context, channel, msg string) *redis.IntCmd {
-
-	conn, err := s.getRedis()
-	if err != nil {
-		return &redis.IntCmd{}
-	}
-
-	cmd := conn.Publish(ctx, channel, msg)
-
-	return cmd
-}
-
-func (s *Redis) getRedis() (redis.UniversalClient, error) {
-	client := redis.NewUniversalClient(&redis.UniversalOptions{
-		Addrs: []string{s.addr},
+		if len(opt.Prefix) > 0 {
+			rdb.AddHook(renameKey{
+				prefix:    opt.Prefix,
+				separator: expr.Ternary(len(opt.Separator) == 0, defaultSeparator, opt.Separator),
+			})
+		}
 	})
 
-	return client, nil
-}
-
-func (s *Redis) formatKeys(keys ...string) []string {
-	// If no prefix is configured, this parameter is returned
-	if s.prefix == "" {
-		return keys
-	}
-
-	ret := make([]string, 0, len(keys))
-	for _, k := range keys {
-		ret = append(ret, s.formatKey(k))
-	}
-
-	return ret
-}
-
-func (s *Redis) formatKey(key string) string {
-	if s.prefix == "" {
-		return key
-	}
-
-	return s.prefix + s.separator + key
+	return Client{UniversalClient: rdb}
 }
