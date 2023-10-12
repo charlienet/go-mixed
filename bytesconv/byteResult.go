@@ -9,6 +9,14 @@ const hexTable = "0123456789ABCDEF"
 
 type BytesResult []byte
 
+func FromString(s string) BytesResult {
+	return (BytesResult)([]byte(s))
+}
+
+func FromBytes(b []byte) BytesResult {
+	return BytesResult(b)
+}
+
 // FromHexString 从十六进制获取
 func FromHexString(s string) (BytesResult, error) {
 	b, err := hex.DecodeString(s)

@@ -10,11 +10,15 @@ import (
 var s = "^aaa^"
 
 func TestPutGet(t *testing.T) {
-	b := NewCompiledBuffer(func(s string) (*regexp.Regexp, error) { return regexp.Compile(s) })
+	b := NewCompiledBuffer(func(s string) (*regexp.Regexp, error) {
+		t.Log("init")
+		return regexp.Compile(s)
+	})
 
 	t.Log(b.Put(s))
 	r, _ := b.Get(s)
 
+	t.Log(r.Match([]byte("abc")))
 	t.Log(r.Match([]byte("abc")))
 }
 
@@ -28,7 +32,7 @@ func BenchmarkGet(b *testing.B) {
 		}
 	})
 
-	b.Run("buf", func(b *testing.B) {
+	b.Run("buf-nocom", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			regexp.Compile(s)
 		}

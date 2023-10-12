@@ -2,7 +2,6 @@ package compress
 
 import (
 	"archive/zip"
-	"io/ioutil"
 	"os"
 )
 
@@ -49,7 +48,7 @@ func (z *zipPackage) Write(out *os.File) error {
 			return err
 		}
 
-		in, err := ioutil.ReadFile(f.filename)
+		in, err := os.ReadFile(f.filename)
 		if err != nil {
 			return err
 		}
