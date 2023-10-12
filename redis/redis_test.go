@@ -1,19 +1,19 @@
-package redis
+package redis_test
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
+	"github.com/charlienet/go-mixed/redis"
+	"github.com/charlienet/go-mixed/tests"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetSet(t *testing.T) {
-	runOnRedis(t, func(client Client) {
+	tests.RunOnRedis(t, func(client redis.Client) {
 		ctx := context.Background()
 
 		val, err := client.GetSet(ctx, "hello", "world").Result()
@@ -39,7 +39,7 @@ func TestGetSet(t *testing.T) {
 }
 
 func TestRedis_SetGetDel(t *testing.T) {
-	runOnRedis(t, func(client Client) {
+	tests.RunOnRedis(t, func(client redis.Client) {
 		ctx := context.Background()
 
 		_, err := client.Set(ctx, "hello", "world", 0).Result()
@@ -55,7 +55,7 @@ func TestRedis_SetGetDel(t *testing.T) {
 }
 
 func TestPubSub(t *testing.T) {
-	runOnRedis(t, func(client Client) {
+	tests.RunOnRedis(t, func(client redis.Client) {
 		ctx := context.Background()
 
 		c := "chat"
@@ -131,39 +131,4 @@ func TestPubSub(t *testing.T) {
 		time.Sleep(time.Second * 2)
 		t.Logf("total received %d message", total)
 	})
-}
-
-func runOnRedis(t *testing.T, fn func(client Client)) {
-	redis, clean, err := CreateMiniRedis()
-	assert.Nil(t, err)
-
-	defer clean()
-
-	fn(redis)
-}
-
-func CreateMiniRedis() (r Client, clean func(), err error) {
-	mr, err := miniredis.Run()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	addr := mr.Addr()
-	log.Println("mini redis run at:", addr)
-
-	return New(&ReidsOption{
-			Addrs: []string{addr},
-		}), func() {
-			ch := make(chan struct{})
-
-			go func() {
-				mr.Close()
-				close(ch)
-			}()
-
-			select {
-			case <-ch:
-			case <-time.After(time.Second):
-			}
-		}, nil
 }
