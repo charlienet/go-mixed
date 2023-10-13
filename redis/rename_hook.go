@@ -8,10 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var (
-// sequentials = sets.NewHashSet("RENAME", "RENAMENX", "MGET", "BLPOP", "BRPOP", "RPOPLPUSH", "SDIFFSTORE", "SINTER")
-)
-
 type renameKey struct {
 	prefix    string
 	separator string
@@ -57,10 +53,19 @@ func (r renameKey) renameKey(cmd redis.Cmder) {
 	switch strings.ToUpper(cmd.Name()) {
 	case "SELECT":
 		// 无KEY指令
-	case "RENAME", "RENAMENX", "MGET", "BLPOP", "BRPOP", "RPOPLPUSH", "SDIFFSTORE", "SINTER", "SINTERSTORE", "SUNIONSTORE":
+	case
+		"RENAME", "RENAMENX",
+		"MGET",
+		"RPOPLPUSH",
+		"SDIFF", "SDIFFSTORE", "SINTER", "SINTERSTORE",
+		"SUNION", "SUNIONSTORE",
+		"WATCH":
 		// 连续KEY
 		r.rename(args, createSepuence(1, len(args), 1)...)
-	case "sssss":
+	case
+		"BLPOP", "BRPOP",
+		"BRPOPLPUSH ",
+		"SMOVE":
 		// 除最后一个外连续键
 		r.rename(args, createSepuence(1, len(args)-1, 1)...)
 	case "MSET", "MSETNX":
@@ -87,7 +92,7 @@ func (r renameKey) rename(args []any, indexes ...int) {
 
 func createSepuence(start, end, step int) []int {
 	ret := make([]int, 0, (end-start)/step+1)
-	for i := start; i <= end; i += step {
+	for i := start; i < end; i += step {
 		ret = append(ret, i)
 	}
 	return ret
