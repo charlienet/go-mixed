@@ -60,6 +60,9 @@ func (r renameKey) renameKey(cmd redis.Cmder) {
 	case "RENAME", "RENAMENX", "MGET", "BLPOP", "BRPOP", "RPOPLPUSH", "SDIFFSTORE", "SINTER", "SINTERSTORE", "SUNIONSTORE":
 		// 连续KEY
 		r.rename(args, createSepuence(1, len(args), 1)...)
+	case "sssss":
+		// 除最后一个外连续键
+		r.rename(args, createSepuence(1, len(args)-1, 1)...)
 	case "MSET", "MSETNX":
 		// 间隔KEY，KEY位置规则1,3,5,7
 		r.rename(args, createSepuence(1, len(args), 2)...)

@@ -9,48 +9,21 @@ import (
 	"github.com/charlienet/go-mixed/bytesconv"
 	"github.com/charlienet/go-mixed/json"
 	"github.com/charlienet/go-mixed/rand"
-	"github.com/go-redis/redis/v8"
+	"github.com/charlienet/go-mixed/redis"
 )
 
 const redisEmptyObject = "redis object not exist"
 
-type RedisConfig struct {
-	Prefix string // key perfix
-	Addrs  []string
-
-	// Database to be selected after connecting to the server.
-	// Only single-node and failover clients.
-	DB int
-
-	Username        string
-	Password        string
-	MaxRetries      int
-	MinRetryBackoff time.Duration
-	MaxRetryBackoff time.Duration
-
-	DialTimeout  time.Duration
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-}
-
 type redisClient struct {
-	client     redis.UniversalClient
+	client     redis.Client
 	emptyStamp string // 空对象标识，每个实例隔离
 	prefix     string // 缓存键前缀
 }
 
-func NewRedis(c RedisConfig) *redisClient {
-	client := redis.NewUniversalClient(&redis.UniversalOptions{
-		Addrs:    c.Addrs,
-		DB:       c.DB,
-		Username: c.Username,
-		Password: c.Password,
-	})
-
+func NewRedis(c redis.Client) *redisClient {
 	return &redisClient{
 		emptyStamp: fmt.Sprintf("redis-empty-%d-%s", time.Now().Unix(), rand.Hex.Generate(6)),
-		prefix:     c.Prefix,
-		client:     client,
+		client:     c,
 	}
 }
 

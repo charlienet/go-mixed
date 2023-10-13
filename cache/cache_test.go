@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/charlienet/go-mixed/redis"
 )
 
 var (
@@ -60,7 +62,9 @@ func TestMemCache(t *testing.T) {
 }
 
 func TestDistributedCache(t *testing.T) {
-	c := NewRedis(RedisConfig{Addrs: []string{"192.168.2.222:6379"}, DB: 6, Password: "123456", Prefix: "abcdef"})
+	c := NewRedis(redis.New(&redis.ReidsOption{
+		Addrs: []string{"192.168.2.222:6379"}, DB: 6, Password: "123456", Prefix: "abcdef",
+	}))
 
 	ctx := context.Background()
 	if err := c.Ping(ctx); err != nil {
@@ -134,7 +138,11 @@ func load() (any, error) {
 func buildCache() *Cache {
 	c, err := New(
 		WithFreeCache(10*1024*1024),
-		WithRedis(RedisConfig{Addrs: []string{"192.168.2.222:6379"}, DB: 6, Password: "123456"}))
+		WithRedis(redis.New(&redis.ReidsOption{
+			Addrs:    []string{"192.168.2.222:6379"},
+			DB:       6,
+			Password: "123456",
+		})))
 
 	if err != nil {
 		panic(err)

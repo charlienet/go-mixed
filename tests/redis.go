@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"log"
 	"testing"
 	"time"
@@ -9,6 +10,19 @@ import (
 	"github.com/charlienet/go-mixed/redis"
 	"github.com/stretchr/testify/assert"
 )
+
+func RunOnSpecifiedRedis(t *testing.T, fn func(client redis.Client), addr ...string) {
+	rdb := redis.New(&redis.ReidsOption{
+		Addrs: addr,
+	})
+	defer rdb.Close()
+
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	fn(rdb)
+}
 
 func RunOnRedis(t *testing.T, fn func(client redis.Client)) {
 	redis, clean, err := createMiniRedis()

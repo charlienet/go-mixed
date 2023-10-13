@@ -7,10 +7,10 @@ import (
 	"github.com/charlienet/go-mixed/cache/bigcache"
 	"github.com/charlienet/go-mixed/cache/freecache"
 	"github.com/charlienet/go-mixed/logx"
+	"github.com/charlienet/go-mixed/redis"
 )
 
 const defaultPrefix = "cache"
-
 
 type option func(*Cache) error
 
@@ -18,14 +18,9 @@ type options struct {
 	Prefix string
 }
 
-func WithRedis(opts RedisConfig) option {
+func WithRedis(rdb redis.Client) option {
 	return func(c *Cache) error {
-		if len(opts.Prefix) == 0 {
-			opts.Prefix = defaultPrefix
-		}
-
-		rds := NewRedis(opts)
-
+		rds := NewRedis(rdb)
 		c.rds = rds
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
