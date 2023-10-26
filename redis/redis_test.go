@@ -3,6 +3,7 @@ package redis_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -133,3 +134,18 @@ func TestPubSub(t *testing.T) {
 	})
 }
 
+func TestRedisPool(t *testing.T) {
+	tests.RunOnRedis(t, func(client redis.Client) {
+		defer client.Close()
+
+		err := client.ConfigSet(context.Background(), "slowlog-log-slower-than", strconv.FormatInt(int64(time.Microsecond)*5, 10)).Err()
+		assert.Nil(t, err, err)
+
+		t.Log(client.ConfigGet(context.Background(), "slowlog-log-slower-than").Result())
+
+	}, redis.ReidsOption{
+		Addr:     "192.168.123.100:6379",
+		PoolSize: 100,
+		PoolFIFO: true,
+	})
+}

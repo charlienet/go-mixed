@@ -34,9 +34,7 @@ func (r renameKey) ProcessPipelineHook(next redis.ProcessPipelineHook) redis.Pro
 func (r renameKey) ProcessHook(next redis.ProcessHook) redis.ProcessHook {
 	return func(ctx context.Context, cmd redis.Cmder) error {
 		r.renameKey(cmd)
-		next(ctx, cmd)
-
-		return nil
+		return next(ctx, cmd)
 	}
 }
 
@@ -51,7 +49,7 @@ func (r renameKey) renameKey(cmd redis.Cmder) {
 	}
 
 	switch strings.ToUpper(cmd.Name()) {
-	case "SELECT":
+	case "SELECT", "EVAL":
 		// 无KEY指令
 	case
 		"RENAME", "RENAMENX",

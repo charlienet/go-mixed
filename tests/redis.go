@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"log"
-	"testing"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
@@ -11,26 +10,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func RunOnSpecifiedRedis(t *testing.T, fn func(client redis.Client), addr ...string) {
-	rdb := redis.New(&redis.ReidsOption{
-		Addrs: addr,
-	})
-	defer rdb.Close()
+func RunOnRedis(t assert.TestingT, fn func(rdb redis.Client), opt ...redis.ReidsOption) {
+	var redis redis.Client
+	var clean func()
+	var err error
 
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		t.Fatal(err)
-	}
-
-	fn(rdb)
-}
-
-func RunOnRedis(t *testing.T, fn func(client redis.Client)) {
-	redis, clean, err := createMiniRedis()
-	assert.Nil(t, err)
+	redis, clean, err = CreateRedis(opt...)
+	assert.Nil(t, err, err)
 
 	defer clean()
-
 	fn(redis)
+}
+
+func CreateRedis(opt ...redis.ReidsOption) (r redis.Client, clean func(), err error) {
+	if len(opt) > 0 {
+		return createRedisClient(opt[0])
+	} else {
+		return createMiniRedis()
+	}
+}
+
+func createRedisClient(opt redis.ReidsOption) (r redis.Client, clean func(), err error) {
+	rdb := redis.New(&opt)
+
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return rdb, func() { rdb.Close() }, nil
 }
 
 func createMiniRedis() (r redis.Client, clean func(), err error) {
@@ -42,19 +49,22 @@ func createMiniRedis() (r redis.Client, clean func(), err error) {
 	addr := mr.Addr()
 	log.Println("mini redis run at:", addr)
 
-	return redis.New(&redis.ReidsOption{
-			Addrs: []string{addr},
-		}), func() {
-			ch := make(chan struct{})
+	rdb := redis.New(&redis.ReidsOption{
+		Addrs: []string{addr},
+	})
 
-			go func() {
-				mr.Close()
-				close(ch)
-			}()
+	return rdb, func() {
+		ch := make(chan struct{})
 
-			select {
-			case <-ch:
-			case <-time.After(time.Second):
-			}
-		}, nil
+		go func() {
+			rdb.Close()
+			mr.Close()
+			close(ch)
+		}()
+
+		select {
+		case <-ch:
+		case <-time.After(time.Second * 5):
+		}
+	}, nil
 }

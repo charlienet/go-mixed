@@ -12,6 +12,8 @@ const (
 	defaultErrorCode = "999999"
 )
 
+var NotImplemented = errors.New("Not Implemented")
+
 type Error interface {
 	Wraped() []error
 	Code() string

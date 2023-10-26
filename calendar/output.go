@@ -53,6 +53,30 @@ const (
 	ShortTimeNanoLayout      = "150405.999999999"
 )
 
+func String(t time.Time) string {
+	return ToDateTimeString(t)
+}
+
+func ToDateTimeString(t time.Time) string {
+	return Create(t).ToDateTimeString()
+}
+
+func Format(t time.Time, layout string) string {
+	return Create(t).Format(layout)
+}
+
+func ToDateTimeInt(t time.Time) int {
+	return Create(t).ToDateTimeInt()
+}
+
+func ToShortDateInt(t time.Time) int {
+	return Create(t).ToShortDateInt()
+}
+
+func ToMonthInt(t time.Time) int {
+	return Create(t).ToMonthInt()
+}
+
 func (c Calendar) String() string {
 	return c.ToDateTimeString()
 }

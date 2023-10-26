@@ -7,7 +7,7 @@ require (
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/alphadose/haxmap v1.3.0
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
-	github.com/bits-and-blooms/bitset v1.9.0
+	github.com/bits-and-blooms/bitset v1.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/coocood/freecache v1.2.4
 	github.com/dlclark/regexp2 v1.10.0
