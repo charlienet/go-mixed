@@ -143,7 +143,7 @@ func TestRedisPool(t *testing.T) {
 
 		t.Log(client.ConfigGet(context.Background(), "slowlog-log-slower-than").Result())
 
-	}, redis.ReidsOption{
+	}, redis.RedisOption{
 		Addr:     "192.168.123.100:6379",
 		PoolSize: 100,
 		PoolFIFO: true,

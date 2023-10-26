@@ -20,7 +20,7 @@ const (
 
 var Nil = redis.Nil
 
-type ReidsOption struct {
+type RedisOption struct {
 	Addr      string
 	Addrs     []string
 	Password  string // 密码
@@ -67,7 +67,7 @@ type redisClient struct {
 	separator string
 }
 
-func New(opt *ReidsOption) redisClient {
+func New(opt *RedisOption) redisClient {
 	var rdb redisClient
 
 	if len(opt.Addrs) == 0 && len(opt.Addr) > 0 {
@@ -112,12 +112,6 @@ func New(opt *ReidsOption) redisClient {
 	}
 
 	return rdb
-}
-
-func (rdb redisClient) Eval(ctx context.Context, script string, keys []string, args ...interface{}) *redis.Cmd {
-	newKeys := rdb.FormatKeys(keys...)
-
-	return rdb.UniversalClient.Eval(ctx, script, newKeys, args...)
 }
 
 func (rdb redisClient) Prefix() string {

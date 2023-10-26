@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func RunOnRedis(t assert.TestingT, fn func(rdb redis.Client), opt ...redis.ReidsOption) {
+func RunOnRedis(t assert.TestingT, fn func(rdb redis.Client), opt ...redis.RedisOption) {
 	var redis redis.Client
 	var clean func()
 	var err error
@@ -22,7 +22,7 @@ func RunOnRedis(t assert.TestingT, fn func(rdb redis.Client), opt ...redis.Reids
 	fn(redis)
 }
 
-func CreateRedis(opt ...redis.ReidsOption) (r redis.Client, clean func(), err error) {
+func CreateRedis(opt ...redis.RedisOption) (r redis.Client, clean func(), err error) {
 	if len(opt) > 0 {
 		return createRedisClient(opt[0])
 	} else {
@@ -30,7 +30,7 @@ func CreateRedis(opt ...redis.ReidsOption) (r redis.Client, clean func(), err er
 	}
 }
 
-func createRedisClient(opt redis.ReidsOption) (r redis.Client, clean func(), err error) {
+func createRedisClient(opt redis.RedisOption) (r redis.Client, clean func(), err error) {
 	rdb := redis.New(&opt)
 
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
@@ -49,7 +49,7 @@ func createMiniRedis() (r redis.Client, clean func(), err error) {
 	addr := mr.Addr()
 	log.Println("mini redis run at:", addr)
 
-	rdb := redis.New(&redis.ReidsOption{
+	rdb := redis.New(&redis.RedisOption{
 		Addrs: []string{addr},
 	})
 
