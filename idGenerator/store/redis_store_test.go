@@ -15,7 +15,7 @@ func TestSmallSerail(t *testing.T) {
 		for i := 0; i < 5; i++ {
 			t.Log(s.Assign(0, 9, 20))
 		}
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
 }
 
 func TestSmallAssign(t *testing.T) {
@@ -27,7 +27,7 @@ func TestSmallAssign(t *testing.T) {
 			t.Log(s.Assign(0, 9, 30))
 		}
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
 }
 
 func TestBigAssign(t *testing.T) {
@@ -39,7 +39,7 @@ func TestBigAssign(t *testing.T) {
 			t.Log(s.Assign(0, 99, 10))
 		}
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
 }
 
 func TestRedisAssign(t *testing.T) {
@@ -51,7 +51,7 @@ func TestRedisAssign(t *testing.T) {
 			t.Log(s.Assign(21, 99, 30))
 		}
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
 }
 
 func TestFullRedisAssign(t *testing.T) {
@@ -63,7 +63,7 @@ func TestFullRedisAssign(t *testing.T) {
 			t.Log(s.Assign(0, 999, 99))
 		}
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
 }
 
 func TestUpdateMachineCode(t *testing.T) {
@@ -85,7 +85,7 @@ func TestUpdateMachineCode(t *testing.T) {
 
 		time.Sleep(time.Second * 10)
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456", Prefix: "cacc"})
+	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456", Prefix: "cacc"})
 
 }
 
@@ -102,5 +102,5 @@ func TestUpdate(t *testing.T) {
 		s2.UpdateMachineCode(99)
 		t.Log(s2.MachineCode())
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456", Prefix: "cacc"})
+	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456", Prefix: "cacc"})
 }

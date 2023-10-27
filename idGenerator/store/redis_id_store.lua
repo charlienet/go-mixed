@@ -81,6 +81,8 @@ local function allocateSerial(keys, args)
         begin = min
         finish = step
         redis.call("HSET", key, code, step)
+
+        -- 检查上次绕回时间，判断是否需要检查时间段冲突
         reback = 1
     end
 

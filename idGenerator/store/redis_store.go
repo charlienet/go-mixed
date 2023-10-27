@@ -11,75 +11,12 @@ import (
 	"github.com/charlienet/go-mixed/redis"
 )
 
-const (
-	allocatedKey = "allocated"
-	sequenceKey  = "sequence"
-	delaySecond  = 10
-)
-
-const (
-	// 机器码分配及保活，检查机器码键值是否匹配，如匹配成功对键进行延时。如不匹配需要重新申请机器码
-	// 请求参数  机器码，机器识别码，机器码最大值
-	machineLua = `
-	local newKey = KEYS[1]..":"..ARGV[1]
-	if redis.call("GET", newKey) == ARGV[2] then
-		redis.call("EXPIRE", newKey, 10)
-		return tonumber(ARGV[1])
-	else
-		for i = 0, ARGV[3], 1 do
-			newKey = KEYS[1]..":"..tostring(i)
-
-			if redis.call("EXISTS", newKey) == 0 then
-				redis.call("SET", newKey, ARGV[2], "EX", 10)
-				return i
-			end
-		end
-		return -1
-	end`
-
-	// 序列分配min, max, step
-	segmentLua = `
-local key = KEYS[1]
-local min = tonumber(ARGV[1])
-local max = tonumber(ARGV[2])
-local step = tonumber(ARGV[3])
-
-if step > max then
-	step = max
-end
-
-if redis.call("EXISTS", key) == 0 then
-	redis.call("SET", key, step)
-	return {min, step, 0}
-end
-
-local begin = tonumber(redis.call("GET", key))
-local increase = redis.call("INCRBY", key, step)
-local reback = 0
-
-if begin >= max then
-	begin = min
-	increase = step
-
-	redis.call("SET", key, step)
-	reback = 1
-end
-
-if increase > max then
-	increase = max
-	redis.call("SET", key, increase)
-end
-
-return {begin, increase, reback}
-`
-)
-
 type redisStore struct {
 	rdb         redis.Client
-	machinekey  string        // 机器码键
-	sequenceKey string        // 序列键
-	value       string        // 随机键值
+	key         string        // 缓存键
+	machine     string        // 随机键值(机器标识)
 	machineCode int64         // 机器码
+	max         int64         // 机器码的最大值
 	close       chan struct{} // 关闭保活协程
 	isRunning   bool          // 是否已经关闭
 	mu          sync.Mutex
@@ -88,15 +25,17 @@ type redisStore struct {
 func NewRedisStore(key string, rdb redis.Client) *redisStore {
 	return &redisStore{
 		rdb:         rdb,
-		machinekey:  rdb.JoinKeys(key, allocatedKey),
-		sequenceKey: rdb.JoinKeys(key, sequenceKey),
-		value:       rand.Hex.Generate(24),
+		key:         key,
+		machineCode: -1,
+		machine:     rand.Hex.Generate(24),
 		close:       make(chan struct{}),
 	}
 }
 
 // 分配机器标识，分配值为-1时表示分配失败
 func (s *redisStore) UpdateMachineCode(max int64) (int64, error) {
+	s.max = max
+
 	err := s.updateMachine(max)
 	if err != nil {
 		return -1, err
@@ -127,22 +66,24 @@ func (s *redisStore) Assign(min, max, step int64) (*Segment, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 
-	// 序列段分配
-	key := s.rdb.JoinKeys(s.sequenceKey, fmt.Sprintf("%v", s.machineCode))
-	r, err := s.rdb.Eval(ctx, segmentLua, []string{key}, min, max, step).Result()
+	// 序列段分配 机器码，机器标识，步长，序列最小值，序列最大值，机器码最大值
+	r, err := s.rdb.FCall(ctx, "allocateSerial", []string{s.key}, s.machineCode, s.machine, step, min, max, s.max).Result()
 	if err != nil {
 		return &Segment{}, err
 	}
 
-	start, end, reback := split(r)
+	machineCode, start, end, reback := split(r)
+	s.machineCode = machineCode
+
 	return &Segment{start: start, end: end, current: start, reback: reback}, err
 }
 
-func split(r any) (start, end int64, reback bool) {
+func split(r any) (machineCode, start, end int64, reback bool) {
 	if result, ok := r.([]any); ok {
-		start = result[0].(int64)
-		end = result[1].(int64)
-		reback = result[2].(int64) == 1
+		machineCode = result[0].(int64)
+		start = result[1].(int64)
+		end = result[2].(int64)
+		reback = result[3].(int64) == 1
 	}
 
 	return
@@ -152,7 +93,8 @@ func (s *redisStore) updateMachine(max int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	r, err := s.rdb.Eval(ctx, machineLua, []string{s.machinekey}, s.machineCode, s.value, max).Result()
+	//机器码当前值，机器标识，机器码最大值
+	r, err := s.rdb.FCall(ctx, "updateMachineCode", []string{s.key}, s.machineCode, s.machine, s.max).Result()
 	if err != nil {
 		return err
 	}
@@ -175,7 +117,7 @@ func (s *redisStore) Close() {
 }
 
 func (s *redisStore) keepAlive(max int64) {
-	t := time.NewTicker(time.Second * (delaySecond / 3))
+	t := time.NewTicker(time.Second * 2)
 	defer t.Stop()
 
 	for {
