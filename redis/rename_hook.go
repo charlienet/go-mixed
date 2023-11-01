@@ -49,7 +49,7 @@ func (r renameKey) renameKey(cmd redis.Cmder) {
 	}
 
 	switch strings.ToUpper(cmd.Name()) {
-	case "SELECT":
+	case "SELECT", "FUNCTION":
 		// 无KEY指令
 	case
 		"RENAME", "RENAMENX",
@@ -69,8 +69,8 @@ func (r renameKey) renameKey(cmd redis.Cmder) {
 	case "MSET", "MSETNX":
 		// 间隔KEY，KEY位置规则1,3,5,7
 		r.rename(args, createSepuence(1, len(args), 2)...)
-	case "EVAL":
-		// 命令中包含键数量  EVAL script numkeys [key [key ...]] [arg [arg ...]]
+	case "EVAL", "EVALSHA", "EVALSHA_RO", "FCALL", "FCALL_RO":
+		// 命令中包含键数量
 		if n, ok := args[2].(int); ok && n > 0 {
 			r.rename(args, createSepuence(3, 3+n, 1)...)
 		}
