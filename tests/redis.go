@@ -10,6 +10,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var DefaultRedis = redis.RedisOption{
+	Addr:     "redis:6379",
+	Password: "123456",
+}
+
+func RunOnDefaultRedis(t assert.TestingT, fn func(rdb redis.Client)) {
+	RunOnRedis(t, fn, DefaultRedis)
+}
+
 func RunOnRedis(t assert.TestingT, fn func(rdb redis.Client), opt ...redis.RedisOption) {
 	var redis redis.Client
 	var clean func()

@@ -7,9 +7,16 @@ import (
 	"sync"
 	"time"
 
+	_ "embed"
+
 	"github.com/charlienet/go-mixed/rand"
 	"github.com/charlienet/go-mixed/redis"
 )
+
+//go:embed redis_id_store.lua
+var redis_id_function string
+
+var once sync.Once
 
 type redisStore struct {
 	rdb         redis.Client
@@ -23,6 +30,8 @@ type redisStore struct {
 }
 
 func NewRedisStore(key string, rdb redis.Client) *redisStore {
+	once.Do(func() { rdb.LoadFunction(redis_id_function) })
+
 	return &redisStore{
 		rdb:         rdb,
 		key:         key,

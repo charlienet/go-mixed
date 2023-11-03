@@ -10,8 +10,6 @@ import (
 	"github.com/charlienet/go-mixed/tests"
 )
 
-var redisOption = redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"}
-
 func TestGenerator(t *testing.T) {
 	tests.RunOnRedis(t, func(rdb redis.Client) {
 		generator, err := idgenerator.New(
@@ -28,7 +26,7 @@ func TestGenerator(t *testing.T) {
 }
 
 func TestDecimalGenerator(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 		generator, err := idgenerator.New(
 			idgenerator.WithDecimalFormater(idgenerator.YYYYMMDDHHmmss, 3, 1),
 			idgenerator.WithRedis("idgen_test", rdb))
@@ -39,11 +37,11 @@ func TestDecimalGenerator(t *testing.T) {
 			t.Log(generator.Next())
 		}
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }
 
 func TestDecimalMonth(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 		generator, err := idgenerator.New(
 			idgenerator.WithDecimalFormater(idgenerator.YYYYMMDD, 2, 1),
 			idgenerator.WithRedis("idgen_test", rdb))
@@ -54,11 +52,11 @@ func TestDecimalMonth(t *testing.T) {
 			t.Log(generator.Next())
 		}
 
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }
 
 func TestParallelCreate(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 		var wg sync.WaitGroup
 
 		wg.Add(2)
@@ -90,16 +88,15 @@ func TestParallelCreate(t *testing.T) {
 
 		wg.Wait()
 
-	}, redisOption)
+	})
 }
 
 func TestParallel(t *testing.T) {
 	set := sets.NewHashSet[int64]().Sync()
-	opt := redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"}
 
 	_ = set
 	f := func() {
-		tests.RunOnRedis(t, func(rdb redis.Client) {
+		tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 			generator, err := idgenerator.New(
 				idgenerator.WithDecimalFormater(idgenerator.YYYYMMDDHHmmss, 3, 1),
 				idgenerator.WithRedis("idgen_testcccc", rdb))
@@ -117,7 +114,7 @@ func TestParallel(t *testing.T) {
 				set.Add(id)
 			}
 
-		}, opt)
+		})
 	}
 
 	var wg sync.WaitGroup
@@ -133,7 +130,7 @@ func TestParallel(t *testing.T) {
 }
 
 func BenchmarkGenerator(b *testing.B) {
-	tests.RunOnRedis(b, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(b, func(rdb redis.Client) {
 		b.Run("bbb", func(b *testing.B) {
 			generator, err := idgenerator.New(
 				idgenerator.WithDecimalFormater(idgenerator.YYYYMMDDHHmmss, 3, 1),
@@ -147,5 +144,5 @@ func BenchmarkGenerator(b *testing.B) {
 			}
 
 		})
-	}, redis.ReidsOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }

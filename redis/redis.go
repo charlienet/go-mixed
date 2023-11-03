@@ -128,7 +128,10 @@ func (rdb redisClient) Prefix() string {
 }
 
 func (rdb redisClient) LoadFunction(code string) {
-	rdb.FunctionLoadReplace(context.Background(), code)
+	_, err := rdb.FunctionLoadReplace(context.Background(), code).Result()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (rdb redisClient) Separator() string {

@@ -2,9 +2,8 @@ package rand
 
 import (
 	mrnd "math/rand"
+	"sync"
 	"time"
-
-	"github.com/charlienet/go-mixed/locker"
 )
 
 // 随机数生成器接口
@@ -47,13 +46,12 @@ var (
 
 type mathRandGenerator struct {
 	source mrnd.Source
-	r      locker.Locker
+	r      *sync.Mutex
 }
 
 func NewRandGenerator() *mathRandGenerator {
 	return &mathRandGenerator{
 		source: mrnd.NewSource(getSeed()),
-		r:      locker.NewSpinLocker(),
 	}
 }
 

@@ -59,7 +59,7 @@ type distributedlock struct {
 func NewDistributedLocker(ctx context.Context, key string, clients ...redis.Client) *distributedlock {
 	expire := defaultExpire
 	if deadline, ok := ctx.Deadline(); ok {
-		expire = deadline.Sub(time.Now())
+		expire = time.Until(deadline)
 	}
 
 	locker := &distributedlock{

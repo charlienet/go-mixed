@@ -10,16 +10,16 @@ import (
 )
 
 func TestSmallSerail(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 		s := store.NewRedisStore("sss", rdb)
 		for i := 0; i < 5; i++ {
 			t.Log(s.Assign(0, 9, 20))
 		}
-	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }
 
 func TestSmallAssign(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 
 		s := store.NewRedisStore("sss", rdb)
 
@@ -27,11 +27,11 @@ func TestSmallAssign(t *testing.T) {
 			t.Log(s.Assign(0, 9, 30))
 		}
 
-	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }
 
 func TestBigAssign(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 
 		s := store.NewRedisStore("sss", rdb)
 
@@ -39,11 +39,11 @@ func TestBigAssign(t *testing.T) {
 			t.Log(s.Assign(0, 99, 10))
 		}
 
-	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }
 
 func TestRedisAssign(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 
 		s := store.NewRedisStore("sss", rdb)
 
@@ -51,11 +51,11 @@ func TestRedisAssign(t *testing.T) {
 			t.Log(s.Assign(21, 99, 30))
 		}
 
-	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }
 
 func TestFullRedisAssign(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 
 		s := store.NewRedisStore("sss", rdb)
 
@@ -63,11 +63,11 @@ func TestFullRedisAssign(t *testing.T) {
 			t.Log(s.Assign(0, 999, 99))
 		}
 
-	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456"})
+	})
 }
 
 func TestUpdateMachineCode(t *testing.T) {
-	tests.RunOnRedis(t, func(rdb redis.Client) {
+	tests.RunOnDefaultRedis(t, func(rdb redis.Client) {
 
 		for i := 0; i < 20; i++ {
 			s := store.NewRedisStore("id", rdb)
@@ -85,7 +85,7 @@ func TestUpdateMachineCode(t *testing.T) {
 
 		time.Sleep(time.Second * 10)
 
-	}, redis.RedisOption{Addr: "192.168.123.50:6379", Password: "123456", Prefix: "cacc"})
+	})
 
 }
 
