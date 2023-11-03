@@ -53,12 +53,21 @@ type RedisOption struct {
 
 var _ Client = redisClient{}
 
+type Clients []Client
+
+func (clients Clients) LoadFunction(code string) {
+	for _, c := range clients {
+		c.LoadFunction(code)
+	}
+}
+
 type Client interface {
 	redis.UniversalClient
-	Prefix() string
-	Separator() string
-	JoinKeys(keys ...string) string
-	FormatKeys(keys ...string) []string
+	LoadFunction(f string)              // 加载函数脚本
+	Prefix() string                     // 统一前缀
+	Separator() string                  // 分隔符
+	JoinKeys(keys ...string) string     // 连接KEY
+	FormatKeys(keys ...string) []string // 格式化KEY
 }
 
 type redisClient struct {
@@ -116,6 +125,10 @@ func New(opt *RedisOption) redisClient {
 
 func (rdb redisClient) Prefix() string {
 	return rdb.prefix
+}
+
+func (rdb redisClient) LoadFunction(code string) {
+	rdb.FunctionLoadReplace(context.Background(), code)
 }
 
 func (rdb redisClient) Separator() string {

@@ -15,14 +15,14 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
 	github.com/pkg/errors v0.9.1
-	github.com/redis/go-redis/v9 v9.2.1
+	github.com/redis/go-redis/v9 v9.3.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tjfoc/gmsm v1.4.1
 	github.com/vmihailenco/go-tinylfu v0.2.2
-	github.com/vmihailenco/msgpack/v5 v5.4.0
+	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/crypto v0.14.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/net v0.17.0
