@@ -4,33 +4,18 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"sync"
 	"time"
+
+	_ "embed"
 
 	"github.com/charlienet/go-mixed/redis"
 )
 
-const (
-	// ARGV:偏移量offset数组
-	// KYES[1]: setbit操作的key
-	// 全部设置为1
-	setScript = `
-		for _, offset in ipairs(ARGV) do
-			redis.call("setbit", KEYS[1], offset, 1)
-		end
-    `
+//go:embed bloom.lua
+var redis_bloom_function string
 
-	//ARGV:偏移量offset数组
-	//KYES[1]: setbit操作的key
-	//检查是否全部为1
-	testScript = `
-	for _, offset in ipairs(ARGV) do
-		if tonumber(redis.call("getbit", KEYS[1], offset)) == 0 then
-			return false
-		end
-	end
-	return true
-    `
-)
+var once sync.Once
 
 var ErrTooLargeOffset = errors.New("超出最大偏移量")
 
@@ -44,6 +29,8 @@ type redisBitSet struct {
 }
 
 func newRedisStore(store redis.Client, key string, bits uint) *redisBitSet {
+	once.Do(func() { store.LoadFunction(redis_bloom_function) })
+
 	return &redisBitSet{
 		store: store,
 		key:   key,
@@ -51,16 +38,13 @@ func newRedisStore(store redis.Client, key string, bits uint) *redisBitSet {
 	}
 }
 
-func (s *redisBitSet) Set(offsets ...uint) error {
+func (s *redisBitSet) Set(ctx context.Context, offsets ...uint) error {
 	args, err := s.buildOffsetArgs(offsets)
 	if err != nil {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
-	defer cancel()
-
-	_, err = s.store.Eval(ctx, setScript, []string{s.key}, args).Result()
+	_, err = s.store.FCall(ctx, "set_bit", []string{s.key}, args...).Result()
 
 	//底层使用的是go-redis,redis.Nil表示操作的key不存在
 	//需要针对key不存在的情况特殊判断
@@ -82,7 +66,7 @@ func (s *redisBitSet) Test(offsets ...uint) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
 	defer cancel()
 
-	resp, err := s.store.Eval(ctx, testScript, []string{s.key}, args).Result()
+	resp, err := s.store.FCall(ctx, "test_bit", []string{s.key}, args...).Result()
 
 	// key 不存在，表示还未存放任何数据
 	if err == redis.Nil {
@@ -103,8 +87,8 @@ func (s *redisBitSet) Clear() {
 
 }
 
-func (r *redisBitSet) buildOffsetArgs(offsets []uint) ([]string, error) {
-	args := make([]string, 0, len(offsets))
+func (r *redisBitSet) buildOffsetArgs(offsets []uint) ([]any, error) {
+	args := make([]any, 0, len(offsets))
 	for _, offset := range offsets {
 		if offset >= r.bits {
 			return nil, ErrTooLargeOffset

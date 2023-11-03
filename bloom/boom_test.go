@@ -1,6 +1,7 @@
 package bloom_test
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -19,13 +20,13 @@ func TestBloom(t *testing.T) {
 	b := bloom.New(1000, 0.03)
 
 	for i := 0; i < 1000000; i++ {
-		b.Add(strconv.Itoa(i))
+		b.Add(context.Background(), strconv.Itoa(i))
 	}
 
 	v := "6943553521463296-1635402930"
 
 	t.Log(b.ExistString(v))
-	b.Add(v)
+	b.Add(context.Background(), v)
 	t.Log(b.ExistString(v))
 
 	isSet, err := b.ExistString(strconv.Itoa(9999))
@@ -50,7 +51,7 @@ func TestOptimize(t *testing.T) {
 
 func TestRedis(t *testing.T) {
 
-	client := redis.New(&redis.ReidsOption{
+	client := redis.New(&redis.RedisOption{
 		Addrs:    []string{"192.168.2.222:6379"},
 		Password: "123456",
 	})
@@ -58,7 +59,7 @@ func TestRedis(t *testing.T) {
 	bf := bloom.New(10000, 0.03, bloom.WithRedis(client, "bloom:test"))
 
 	for i := 0; i < 100; i++ {
-		bf.Add(strconv.Itoa(i))
+		bf.Add(context.Background(), strconv.Itoa(i))
 	}
 
 	for i := 0; i < 100; i++ {
@@ -82,7 +83,7 @@ func TestClear(t *testing.T) {
 	bf := bloom.New(1000, 0.03)
 
 	v := "abc"
-	bf.Add(v)
+	bf.Add(context.Background(), v)
 	isSet, _ := bf.ExistString(v)
 	assert.True(t, isSet)
 
@@ -97,7 +98,7 @@ func TestParallel(t *testing.T) {
 	for i := 0; i < 10000; i++ {
 		v := rand.Hex.Generate(10)
 
-		f.Add(v)
+		f.Add(context.Background(), v)
 		isSet, _ := f.ExistString(v)
 
 		assert.True(t, isSet)
@@ -109,8 +110,9 @@ func BenchmarkFilter(b *testing.B) {
 
 	b.RunParallel(func(p *testing.PB) {
 		for p.Next() {
+
 			v := rand.Hex.Generate(10)
-			f.Add(v)
+			f.Add(context.Background(), v)
 
 			f.ExistString(v)
 

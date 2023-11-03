@@ -1,6 +1,8 @@
 package bloom
 
 import (
+	"context"
+
 	"github.com/bits-and-blooms/bitset"
 	"github.com/charlienet/go-mixed/locker"
 )
@@ -26,7 +28,7 @@ func (s *memStore) Clear() {
 	s.set.ClearAll()
 }
 
-func (s *memStore) Set(offsets ...uint) error {
+func (s *memStore) Set(ctx context.Context, offsets ...uint) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

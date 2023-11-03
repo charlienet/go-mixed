@@ -1,16 +1,22 @@
 package bloom
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/charlienet/go-mixed/redis"
 	"github.com/charlienet/go-mixed/tests"
 )
 
 func TestRedisStore(t *testing.T) {
-	tests.RunOnRedis(t, func(client redis.Client) {
+	tests.RunOnDefaultRedis(t, func(client redis.Client) {
 		store := newRedisStore(client, "abcdef", 10000)
-		err := store.Set(1, 2, 3, 9, 1223)
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
+		err := store.Set(ctx, 1, 2, 3, 9, 1223)
 		if err != nil {
 			t.Fatal(err)
 		}

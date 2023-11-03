@@ -1,6 +1,7 @@
 package bloom
 
 import (
+	"context"
 	"math"
 
 	"github.com/charlienet/go-mixed/bytesconv"
@@ -15,7 +16,7 @@ var seeds = []uint{7, 11, 13, 31, 37, 61}
 
 type bitStore interface {
 	Clear()
-	Set(pos ...uint) error
+	Set(ctx context.Context, pos ...uint) error
 	Test(pos ...uint) (bool, error)
 }
 
@@ -63,9 +64,9 @@ func New(expectedInsertions uint, fpp float64, opts ...option) *BloomFilter {
 	return bf
 }
 
-func (bf *BloomFilter) Add(data string) {
+func (bf *BloomFilter) Add(ctx context.Context, data string) {
 	offsets := bf.geOffsets([]byte(data))
-	bf.store.Set(offsets...)
+	bf.store.Set(ctx, offsets...)
 }
 
 func (bf *BloomFilter) ExistString(data string) (bool, error) {
