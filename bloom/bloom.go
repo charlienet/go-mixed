@@ -12,7 +12,7 @@ import (
 
 const DEFAULT_SIZE = 2 << 24
 
-var seeds = []uint{7, 11, 13, 31, 37, 61}
+var seeds = []uint{7, 11, 13, 31, 37, 61, 79, 97}
 
 type bitStore interface {
 	Clear()
@@ -51,6 +51,9 @@ func New(expectedInsertions uint, fpp float64, opts ...option) *BloomFilter {
 
 	bits := optimalNumOfBits(expectedInsertions, fpp)
 	k := optimalNumOfHashFunctions(bits, expectedInsertions)
+	if k > uint(len(seeds)) {
+		k = uint(len(seeds))
+	}
 
 	bf := &BloomFilter{
 		bits:  bits,
@@ -74,7 +77,7 @@ func (bf *BloomFilter) ExistString(data string) (bool, error) {
 }
 
 func (bf *BloomFilter) Exists(data []byte) (bool, error) {
-	if data == nil || len(data) == 0 {
+	if len(data) == 0 {
 		return false, nil
 	}
 
@@ -90,7 +93,7 @@ func (bf *BloomFilter) Exists(data []byte) (bool, error) {
 func (bf *BloomFilter) geOffsets(data []byte) []uint {
 	offsets := make([]uint, bf.funcs)
 	for i := uint(0); i < bf.funcs; i++ {
-		offsets[i] = uint(hash.Murmur3(append(data, byte(i))) % uint64(bf.bits))
+		offsets[i] = uint(hash.Murmur3(append(data, byte(seeds[i]))) % uint64(bf.bits))
 	}
 
 	return offsets
