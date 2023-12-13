@@ -5,11 +5,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Configure interface {
-	GetString(string, string) string
-}
+type NotifyFunc func(Configure) error
 
-type NotifyFunc func(Configure)
+type Configure interface {
+	Load(dataId string, v any, onChanged ...NotifyFunc) error
+	GetString(string, string) string
+	GetInt(key string, defaultValue int) int
+}
 
 type conf struct {
 	viper            *viper.Viper            //
