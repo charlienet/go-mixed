@@ -1,0 +1,7 @@
+Mode = "dev"
+
+[Nacos]
+    Address = "192.168.2.121"
+    Port = 8848
+    Namespace = "8560b58d-87d0-4b85-8ac5-f2d308c6669e"
+    Group = "dev"
