@@ -5,7 +5,6 @@ import (
 	"math"
 
 	"github.com/charlienet/go-mixed/bytesconv"
-	"github.com/charlienet/go-mixed/expr"
 	"github.com/charlienet/go-mixed/hash"
 	"github.com/charlienet/go-mixed/redis"
 )
@@ -58,10 +57,7 @@ func New(expectedInsertions uint, fpp float64, opts ...option) *BloomFilter {
 	bf := &BloomFilter{
 		bits:  bits,
 		funcs: k,
-		store: expr.Ternary[bitStore](
-			opt.redisClient == nil,
-			newMemStore(bits),
-			newRedisStore(opt.redisClient, opt.redisKey, bits)),
+		store: createBitStore(opt, bits),
 	}
 
 	return bf
@@ -102,6 +98,14 @@ func (bf *BloomFilter) geOffsets(data []byte) []uint {
 // 清空布隆过滤器
 func (bf *BloomFilter) Clear() {
 	bf.store.Clear()
+}
+
+func createBitStore(opt *bloomOptions, bits uint) bitStore {
+	if opt.redisClient != nil {
+		return newRedisStore(opt.redisClient, opt.redisKey, bits)
+	}
+
+	return newMemStore(bits)
 }
 
 // 计算优化的位图长度，
