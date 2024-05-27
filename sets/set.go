@@ -1,15 +1,13 @@
 package sets
 
 import (
-	"sync"
-
 	"github.com/charlienet/go-mixed/locker"
 	"golang.org/x/exp/constraints"
 )
 
 type Set[T comparable] interface {
-	Add(...T)
-	Remove(v T)
+	Add(...T) Set[T]
+	Remove(v T) Set[T]
 	Asc() Set[T]
 	Desc() Set[T]
 	Contains(T) bool
@@ -19,18 +17,16 @@ type Set[T comparable] interface {
 	ToSlice() []T // 转换为切片
 }
 
-var defaultOptions = option{locker: locker.NewEmptyLocker()}
-
 type option struct {
-	locker sync.Locker
+	locker locker.Locker
 }
 
-type setFunc func(option)
+type setFunc func(*option)
 
 func WithSync() setFunc {
 
-	return func(o option) {
-		o.locker = &sync.RWMutex{}
+	return func(o *option) {
+		o.locker.Synchronize()
 	}
 }
 

@@ -13,14 +13,13 @@ import (
 var _ Set[string] = &hash_set[string]{}
 
 type hash_set[T constraints.Ordered] struct {
-	m    map[T]struct{}
-	lock locker.RWLocker
+	m      map[T]struct{}
+	locker locker.RWLocker
 }
 
 func NewHashSet[T constraints.Ordered](values ...T) *hash_set[T] {
 	set := hash_set[T]{
-		m:    make(map[T]struct{}, len(values)),
-		lock: locker.EmptyLocker,
+		m: make(map[T]struct{}, len(values)),
 	}
 
 	set.Add(values...)
@@ -28,37 +27,41 @@ func NewHashSet[T constraints.Ordered](values ...T) *hash_set[T] {
 }
 
 func (s *hash_set[T]) Sync() *hash_set[T] {
-	s.lock = locker.NewRWLocker()
+	s.locker.Synchronize()
 	return s
 }
 
-func (s hash_set[T]) Add(values ...T) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+func (s *hash_set[T]) Add(values ...T) Set[T] {
+	s.locker.Lock()
+	defer s.locker.Unlock()
 
 	for _, v := range values {
 		s.m[v] = struct{}{}
 	}
+
+	return s
 }
 
-func (s hash_set[T]) Remove(v T) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+func (s *hash_set[T]) Remove(v T) Set[T] {
+	s.locker.Lock()
+	defer s.locker.Unlock()
 
 	delete(s.m, v)
+
+	return s
 }
 
-func (s hash_set[T]) Contains(value T) bool {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+func (s *hash_set[T]) Contains(value T) bool {
+	s.locker.RLock()
+	defer s.locker.RUnlock()
 
 	_, ok := s.m[value]
 	return ok
 }
 
-func (s hash_set[T]) ContainsAny(values ...T) bool {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+func (s *hash_set[T]) ContainsAny(values ...T) bool {
+	s.locker.RLock()
+	defer s.locker.RUnlock()
 
 	for _, v := range values {
 		if _, ok := s.m[v]; ok {
@@ -69,9 +72,9 @@ func (s hash_set[T]) ContainsAny(values ...T) bool {
 	return false
 }
 
-func (s hash_set[T]) ContainsAll(values ...T) bool {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+func (s *hash_set[T]) ContainsAll(values ...T) bool {
+	s.locker.RLock()
+	defer s.locker.RUnlock()
 
 	for _, v := range values {
 		if _, ok := s.m[v]; !ok {
@@ -82,15 +85,15 @@ func (s hash_set[T]) ContainsAll(values ...T) bool {
 	return true
 }
 
-func (s hash_set[T]) Asc() Set[T] {
+func (s *hash_set[T]) Asc() Set[T] {
 	return s.copyToSorted().Asc()
 }
 
-func (s hash_set[T]) Desc() Set[T] {
+func (s *hash_set[T]) Desc() Set[T] {
 	return s.copyToSorted().Desc()
 }
 
-func (s hash_set[T]) copyToSorted() Set[T] {
+func (s *hash_set[T]) copyToSorted() Set[T] {
 	orderd := NewSortedSet[T]()
 	for k := range s.m {
 		orderd.Add(k)
@@ -109,13 +112,13 @@ func (s *hash_set[T]) Clone() *hash_set[T] {
 	return set
 }
 
-func (s hash_set[T]) Iterate(fn func(value T)) {
+func (s *hash_set[T]) Iterate(fn func(value T)) {
 	for v := range s.m {
 		fn(v)
 	}
 }
 
-func (s hash_set[T]) ToSlice() []T {
+func (s *hash_set[T]) ToSlice() []T {
 	values := make([]T, 0, s.Size())
 	s.Iterate(func(value T) {
 		values = append(values, value)
@@ -124,15 +127,15 @@ func (s hash_set[T]) ToSlice() []T {
 	return values
 }
 
-func (s hash_set[T]) IsEmpty() bool {
+func (s *hash_set[T]) IsEmpty() bool {
 	return len(s.m) == 0
 }
 
-func (s hash_set[T]) Size() int {
+func (s *hash_set[T]) Size() int {
 	return len(s.m)
 }
 
-func (s hash_set[T]) MarshalJSON() ([]byte, error) {
+func (s *hash_set[T]) MarshalJSON() ([]byte, error) {
 	items := make([]string, 0, s.Size())
 
 	for ele := range s.m {
@@ -147,7 +150,7 @@ func (s hash_set[T]) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("[%s]", strings.Join(items, ", "))), nil
 }
 
-func (s hash_set[T]) UnmarshalJSON(b []byte) error {
+func (s *hash_set[T]) UnmarshalJSON(b []byte) error {
 	var i []any
 
 	d := json.NewDecoder(bytes.NewReader(b))
@@ -166,7 +169,7 @@ func (s hash_set[T]) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (s hash_set[T]) String() string {
+func (s *hash_set[T]) String() string {
 	l := make([]string, 0, len(s.m))
 	for k := range s.m {
 		l = append(l, fmt.Sprint(k))
