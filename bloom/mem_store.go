@@ -17,6 +17,7 @@ func newMemStore(size uint) *memStore {
 	return &memStore{
 		size: size,
 		set:  bitset.New(size),
+		lock: locker.RWLocker{},
 	}
 }
 
