@@ -1,12 +1,14 @@
-package locker
+package locker_test
 
 import (
 	"sync"
 	"testing"
+
+	"github.com/charlienet/go-mixed/locker"
 )
 
 func TestSpinLock(t *testing.T) {
-	l := NewSpinLocker()
+	l := locker.NewSpinLocker()
 
 	n := 10
 	c := 0

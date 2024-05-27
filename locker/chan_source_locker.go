@@ -6,8 +6,15 @@ type ChanLocker interface {
 }
 
 type chanSourceLock struct {
-	m       RWLocker
+	m       rwLocker
 	content map[string]chan int
+}
+
+func NewChanSourceLocker() *chanSourceLock {
+	return &chanSourceLock{
+		m:       NewRWLocker(),
+		content: make(map[string]chan int),
+	}
 }
 
 func (s *chanSourceLock) Get(key string) (ch <-chan int, ok bool) {

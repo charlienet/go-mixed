@@ -1,27 +1,45 @@
 package locker
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
+
+	redis_store "github.com/charlienet/go-mixed/locker/redis"
+	"github.com/charlienet/go-mixed/redis"
 )
 
 // 带计数器锁
 type countLocker struct {
-	Locker
+	rw    rwLocker
 	Count int32
 }
 
 // SourceLocker 资源锁
 type SourceLocker struct {
-	m     RWLocker
-	locks map[string]*countLocker
+	m                 RWLocker
+	distributedLocker DistributedLocker
+	locks             map[string]*countLocker
+	err               error
 }
 
 func NewSourceLocker() *SourceLocker {
-	return &SourceLocker{
-		m:     NewRWLocker(),
+	l := &SourceLocker{
 		locks: make(map[string]*countLocker),
 	}
+
+	l.m.Synchronize()
+	return l
+}
+
+func (s *SourceLocker) WithRedis(key string, clients ...redis.Client) *SourceLocker {
+	redisStore := redis_store.NewRedisStore(key, clients...)
+	return s.WithDistributedLocker(redisStore)
+}
+
+func (s *SourceLocker) WithDistributedLocker(distributed DistributedLocker) *SourceLocker {
+	s.distributedLocker = distributed
+	return s
 }
 
 func (s *SourceLocker) Lock(key string) {
@@ -31,7 +49,7 @@ func (s *SourceLocker) Lock(key string) {
 
 	if ok {
 		atomic.AddInt32(&l.Count, 1)
-		l.Lock()
+		l.rw.Lock()
 
 		fmt.Println("加锁")
 	} else {
@@ -40,18 +58,15 @@ func (s *SourceLocker) Lock(key string) {
 		if l2, ok := s.locks[key]; ok {
 			s.m.Unlock()
 
-			l2.Lock()
+			l2.rw.Lock()
 			fmt.Println("二次检查加锁")
 		} else {
-			n := NewLocker()
-			s.locks[key] = &countLocker{Locker: n, Count: 1}
+			n := NewRWLocker()
+			s.locks[key] = &countLocker{rw: n, Count: 1}
 
 			s.m.Unlock()
 
-			fmt.Printf("新锁准备加锁:%p\n", n)
 			n.Lock()
-
-			fmt.Println("初始加锁")
 		}
 	}
 }
@@ -61,8 +76,11 @@ func (s *SourceLocker) Unlock(key string) {
 
 	if l, ok := s.locks[key]; ok {
 		atomic.AddInt32(&l.Count, -1)
-		fmt.Printf("解锁%p\n", l)
-		l.Unlock()
+		l.rw.Unlock()
+
+		if s.distributedLocker != nil {
+			s.distributedLocker.Unlock(context.Background(), key)
+		}
 
 		if l.Count == 0 {
 			delete(s.locks, key)
@@ -75,18 +93,14 @@ func (s *SourceLocker) TryLock(key string) bool {
 	// 加读锁
 	s.m.RLock()
 	l, ok := s.locks[key]
-
+	s.m.RUnlock()
 	if ok {
-		ret := l.TryLock()
-		s.m.RUnlock()
-
+		ret := l.rw.TryLock()
 		return ret
 	} else {
-		s.m.RUnlock()
-
 		s.m.Lock()
-		n := NewLocker()
-		s.locks[key] = &countLocker{Locker: n, Count: 1}
+		n := NewRWLocker()
+		s.locks[key] = &countLocker{rw: n, Count: 1}
 		s.m.Unlock()
 
 		return n.TryLock()
