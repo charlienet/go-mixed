@@ -1,14 +1,9 @@
 package locker
 
-var _ RWLocker = &emptyLocker{}
-var _ Locker = &emptyLocker{}
+var _ rwLocker = &emptyLocker{}
+var _ locker = &emptyLocker{}
 
-var EmptyLocker = &emptyLocker{}
-
-type emptyLocker struct{}
-
-func NewEmptyLocker() *emptyLocker {
-	return &emptyLocker{}
+type emptyLocker struct {
 }
 
 func (l *emptyLocker) RLock() {}
