@@ -3,94 +3,111 @@ package locker
 import (
 	"log"
 	"sync"
+
+	"github.com/charlienet/go-mixed/redis"
 )
 
-type WithLocker struct {
-	once sync.Once
-	mu   Locker
+var empty = &emptyLocker{}
+
+type Locker struct {
+	once              sync.Once
+	distributedLocker DistributedLocker // 分布式锁
+	mu                locker
 }
 
-func (w *WithLocker) Synchronize() {
-	if w.mu == nil || w.mu == EmptyLocker {
+func (w *Locker) WithRedis(key string, rdb redis.Client) *Locker {
+	return w
+}
+
+func (w *Locker) WithDistributedLocker(d DistributedLocker) *Locker {
+	return w
+}
+
+func (w *Locker) Synchronize() *Locker {
+	if w.mu == nil || w.mu == empty {
 		w.mu = NewLocker()
 	}
+
+	return w
 }
 
-func (w *WithLocker) Lock() {
-	w.ensureLocker().Lock()
+func (w *Locker) Lock() {
+	w.ensureLocker().mu.Lock()
 }
 
-func (w *WithLocker) Unlock() {
-	w.ensureLocker().Unlock()
+func (w *Locker) Unlock() {
+	w.ensureLocker().mu.Unlock()
 }
 
-func (w *WithLocker) TryLock() bool {
-	return w.ensureLocker().TryLock()
+func (w *Locker) TryLock() bool {
+	return w.ensureLocker().mu.TryLock()
 }
 
-func (w *WithLocker) ensureLocker() Locker {
+func (w *Locker) ensureLocker() *Locker {
 	w.once.Do(func() {
 		if w.mu == nil {
-			w.mu = EmptyLocker
+			w.mu = empty
 		}
+
 	})
 
-	return w.mu
+	return w
 }
 
-type WithSpinLocker struct {
-	WithLocker
+type SpinLocker struct {
+	Locker
 }
 
-func (w *WithSpinLocker) Synchronize() {
-	if w.mu == nil || w.mu == EmptyLocker {
+func (w *SpinLocker) Synchronize() {
+	if w.mu == nil || w.mu == empty {
 		w.mu = NewSpinLocker()
 	}
 }
 
-type WithRWLocker struct {
+type RWLocker struct {
 	once sync.Once
-	mu   RWLocker
+	mu   rwLocker
 }
 
-func (w *WithRWLocker) Synchronize() {
-	if w.mu == nil || w.mu == EmptyLocker {
-		log.Println("初始化有效锁")
+func (w *RWLocker) Synchronize() *RWLocker {
+	if w.mu == nil || w.mu == empty {
 		w.mu = NewRWLocker()
 	}
+
+	return w
 }
 
-func (w *WithRWLocker) Lock() {
-	w.ensureLocker().Lock()
+func (w *RWLocker) Lock() {
+	w.ensureLocker().mu.Lock()
 }
 
-func (w *WithRWLocker) TryLock() bool {
-	return w.ensureLocker().TryLock()
+func (w *RWLocker) TryLock() bool {
+	return w.ensureLocker().mu.TryLock()
 }
 
-func (w *WithRWLocker) Unlock() {
-	w.ensureLocker().Unlock()
+func (w *RWLocker) Unlock() {
+	w.ensureLocker().mu.Unlock()
 }
 
-func (w *WithRWLocker) RLock() {
-	w.ensureLocker().RLock()
+func (w *RWLocker) RLock() {
+	w.ensureLocker().mu.RLock()
 }
 
-func (w *WithRWLocker) TryRLock() bool {
-	return w.ensureLocker().TryRLock()
+func (w *RWLocker) TryRLock() bool {
+	return w.ensureLocker().mu.TryRLock()
 }
 
-func (w *WithRWLocker) RUnlock() {
-	w.ensureLocker().RUnlock()
+func (w *RWLocker) RUnlock() {
+	w.ensureLocker().mu.RUnlock()
 }
 
-func (w *WithRWLocker) ensureLocker() RWLocker {
+func (w *RWLocker) ensureLocker() *RWLocker {
 	w.once.Do(func() {
 		if w.mu == nil {
 			log.Println("初始化一个空锁")
-			w.mu = EmptyLocker
+			w.mu = empty
 		}
 	})
 
-	return w.mu
+	return w
 }
