@@ -2,15 +2,15 @@ package bloom
 
 import (
 	"context"
+	"sync"
 
 	"github.com/bits-and-blooms/bitset"
-	"github.com/charlienet/go-mixed/locker"
 )
 
 type memStore struct {
 	size uint
-	set  *bitset.BitSet  // 内存位图
-	lock locker.RWLocker // 同步锁
+	set  *bitset.BitSet // 内存位图
+	lock sync.RWMutex   // 同步锁
 }
 
 func newMemStore(size uint) *memStore {
