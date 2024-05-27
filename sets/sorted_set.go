@@ -14,20 +14,23 @@ type sorted_set[T constraints.Ordered] struct {
 
 func NewSortedSet[T constraints.Ordered](t ...T) *sorted_set[T] {
 	return &sorted_set[T]{
-		set: NewHashSet[T](),
+		sorted: t,
+		set:    NewHashSet(t...),
 	}
 }
 
-func (s *sorted_set[T]) Add(values ...T) {
+func (s *sorted_set[T]) Add(values ...T) Set[T] {
 	for _, v := range values {
 		if !s.set.Contains(v) {
 			s.sorted = append(s.sorted, v)
 			s.set.Add(v)
 		}
 	}
+
+	return s
 }
 
-func (s *sorted_set[T]) Remove(v T) {
+func (s *sorted_set[T]) Remove(v T) Set[T] {
 	if s.set.Contains(v) {
 		for index := range s.sorted {
 			if s.sorted[index] == v {
@@ -38,6 +41,8 @@ func (s *sorted_set[T]) Remove(v T) {
 
 		s.set.Remove(v)
 	}
+
+	return s
 }
 
 func (s *sorted_set[T]) Asc() Set[T] {
