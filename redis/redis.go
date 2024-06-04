@@ -2,17 +2,16 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/charlienet/go-mixed/expr"
+	"github.com/hashicorp/go-version"
 	"github.com/redis/go-redis/v9"
 )
 
 const (
-	defaultSeparator = ":"
-
 	blockingQueryTimeout = 5 * time.Second
 	readWriteTimeout     = 2 * time.Second
 	defaultSlowThreshold = "5000" // 慢查询(单位微秒)
@@ -63,68 +62,121 @@ func (clients Clients) LoadFunction(code string) {
 
 type Client interface {
 	redis.UniversalClient
-	LoadFunction(f string)              // 加载函数脚本
-	Prefix() string                     // 统一前缀
-	Separator() string                  // 分隔符
-	JoinKeys(keys ...string) string     // 连接KEY
-	FormatKeys(keys ...string) []string // 格式化KEY
+	LoadFunction(f string)                  // 加载函数脚本
+	Prefix() string                         // 统一前缀
+	Separator() string                      // 分隔符
+	AddPrefix(prefix ...string) redisClient // 添加前缀
+	JoinKeys(keys ...string) string         // 连接KEY
+	FormatKeys(keys ...string) []string     // 格式化KEY
+	ServerVersion() string
 }
 
 type redisClient struct {
 	redis.UniversalClient
-	prefix    string
-	separator string
+	prefix redisPrefix
+	conf   *redis.UniversalOptions
 }
 
-func New(opt *RedisOption) redisClient {
-	var rdb redisClient
+type constraintFunc func(redisClient) error
 
+func Ping() constraintFunc {
+	return func(rc redisClient) error {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
+		return rc.Ping(ctx).Err()
+	}
+}
+
+func VersionConstraint(expended string) constraintFunc {
+	return func(rc redisClient) error {
+		v := rc.ServerVersion()
+		if len(v) == 0 {
+			return errors.New("version not obtained")
+		}
+		current, err := version.NewVersion(v)
+		if err != nil {
+			return err
+		}
+
+		constraint, err := version.NewConstraint(expended)
+		if err != nil {
+			return err
+		}
+
+		if !constraint.Check(current) {
+			return fmt.Errorf("the desired version is %v, which does not match the expected version %v", current, expended)
+		}
+
+		return nil
+	}
+}
+
+func New(opt *RedisOption, constraints ...constraintFunc) redisClient {
 	if len(opt.Addrs) == 0 && len(opt.Addr) > 0 {
 		opt.Addrs = []string{opt.Addr}
 	}
 
-	separator := expr.Ternary(len(opt.Separator) == 0, defaultSeparator, opt.Separator)
-	prefix := expr.Ternary(len(opt.Prefix) > 0, fmt.Sprintf("%s%s", opt.Prefix, separator), "")
+	conf := &redis.UniversalOptions{
+		Addrs:    opt.Addrs,
+		Password: opt.Password,
 
-	rdb = redisClient{
-		prefix:    prefix,
-		separator: separator,
-		UniversalClient: redis.NewUniversalClient(&redis.UniversalOptions{
-			Addrs:    opt.Addrs,
-			Password: opt.Password,
+		DB: opt.DB,
 
-			DB: opt.DB,
+		MaxRetries:      opt.MaxRetries,
+		MinRetryBackoff: opt.MinRetryBackoff,
+		MaxRetryBackoff: opt.MaxRetryBackoff,
 
-			MaxRetries:      opt.MaxRetries,
-			MinRetryBackoff: opt.MinRetryBackoff,
-			MaxRetryBackoff: opt.MaxRetryBackoff,
+		DialTimeout:           opt.DialTimeout,
+		ReadTimeout:           opt.ReadTimeout,
+		WriteTimeout:          opt.WriteTimeout,
+		ContextTimeoutEnabled: opt.ContextTimeoutEnabled,
 
-			DialTimeout:           opt.DialTimeout,
-			ReadTimeout:           opt.ReadTimeout,
-			WriteTimeout:          opt.WriteTimeout,
-			ContextTimeoutEnabled: opt.ContextTimeoutEnabled,
+		PoolSize:        opt.PoolSize,
+		PoolTimeout:     opt.PoolTimeout,
+		MinIdleConns:    opt.MinIdleConns,
+		MaxIdleConns:    opt.MaxIdleConns,
+		ConnMaxIdleTime: opt.ConnMaxIdleTime,
+		ConnMaxLifetime: opt.ConnMaxLifetime,
+	}
 
-			PoolSize:        opt.PoolSize,
-			PoolTimeout:     opt.PoolTimeout,
-			MinIdleConns:    opt.MinIdleConns,
-			MaxIdleConns:    opt.MaxIdleConns,
-			ConnMaxIdleTime: opt.ConnMaxIdleTime,
-			ConnMaxLifetime: opt.ConnMaxLifetime,
-		})}
+	rdb := new(conf, newPrefix(opt.Separator, opt.Prefix))
 
-	rdb.ConfigSet(context.Background(), "slowlog-log-slower-than", defaultSlowThreshold)
+	if len(constraints) > 0 {
+		for _, f := range constraints {
+			if err := f(rdb); err != nil {
+				panic(err)
+			}
+		}
+	}
 
-	if len(opt.Prefix) > 0 {
-		rdb.AddHook(renameKey{
-			prefix: prefix,
-		})
+	return rdb
+}
+
+func NewEnforceConstraints(opt *RedisOption, constraints ...constraintFunc) redisClient {
+	rdb := New(opt)
+	for _, f := range constraints {
+		if err := f(rdb); err != nil {
+			panic(err)
+		}
 	}
 
 	return rdb
 }
 
 func (rdb redisClient) Prefix() string {
-	return rdb.prefix
+	return rdb.prefix.Prefix()
+}
+
+func (rdb redisClient) Separator() string {
+	return rdb.prefix.Separator()
+}
+
+func (rdb redisClient) AddPrefix(prefixes ...string) redisClient {
+	old := rdb.prefix
+	p := newPrefix(old.separator, old.join(prefixes...))
+
+	return new(rdb.conf, p)
 }
 
 func (rdb redisClient) LoadFunction(code string) {
@@ -134,23 +186,47 @@ func (rdb redisClient) LoadFunction(code string) {
 	}
 }
 
-func (rdb redisClient) Separator() string {
-	return rdb.separator
-}
-
 func (rdb redisClient) JoinKeys(keys ...string) string {
-	return strings.Join(keys, rdb.separator)
+	return rdb.prefix.join(keys...)
 }
 
 func (rdb redisClient) FormatKeys(keys ...string) []string {
-	if len(rdb.prefix) == 0 {
+	if !rdb.prefix.hasPrefix() {
 		return keys
 	}
 
 	re := make([]string, 0, len(keys))
 	for _, k := range keys {
-		re = append(re, fmt.Sprintf("%s%s", rdb.prefix, k))
+		re = append(re, fmt.Sprintf("%s%s", rdb.prefix.Prefix(), k))
 	}
 
 	return re
+}
+
+func (rdb redisClient) ServerVersion() string {
+	info, err := rdb.Info(context.Background(), "server").Result()
+	if err != nil {
+		return ""
+	}
+
+	for _, line := range strings.Split(info, "\r\n") {
+		after, found := strings.CutPrefix(line, "redis_version:")
+		if found {
+			return after
+		}
+	}
+
+	return ""
+}
+
+func new(conf *redis.UniversalOptions, prefix redisPrefix) redisClient {
+	c := redis.NewUniversalClient(conf)
+	c.ConfigSet(context.Background(), "slowlog-log-slower-than", defaultSlowThreshold)
+	c.AddHook(renameHook{prefix: prefix})
+
+	return redisClient{
+		UniversalClient: c,
+		prefix:          prefix,
+		conf:            conf,
+	}
 }

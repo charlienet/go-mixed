@@ -52,3 +52,8 @@ redis.ParseURL
  defer gClient.Close()
 
 ```
+
+```
+VersionConstraint(">=7.0")
+
+```

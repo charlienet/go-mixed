@@ -8,18 +8,17 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type renameKey struct {
-	prefix    string
-	separator string
+type renameHook struct {
+	prefix redisPrefix
 }
 
-func (r renameKey) DialHook(next redis.DialHook) redis.DialHook {
+func (r renameHook) DialHook(next redis.DialHook) redis.DialHook {
 	return func(ctx context.Context, network, addr string) (net.Conn, error) {
 		return next(ctx, network, addr)
 	}
 }
 
-func (r renameKey) ProcessPipelineHook(next redis.ProcessPipelineHook) redis.ProcessPipelineHook {
+func (r renameHook) ProcessPipelineHook(next redis.ProcessPipelineHook) redis.ProcessPipelineHook {
 	return func(ctx context.Context, cmds []redis.Cmder) error {
 
 		// 对多个KEY进行更名操作
@@ -31,15 +30,15 @@ func (r renameKey) ProcessPipelineHook(next redis.ProcessPipelineHook) redis.Pro
 	}
 }
 
-func (r renameKey) ProcessHook(next redis.ProcessHook) redis.ProcessHook {
+func (r renameHook) ProcessHook(next redis.ProcessHook) redis.ProcessHook {
 	return func(ctx context.Context, cmd redis.Cmder) error {
 		r.renameKey(cmd)
 		return next(ctx, cmd)
 	}
 }
 
-func (r renameKey) renameKey(cmd redis.Cmder) {
-	if len(r.prefix) == 0 {
+func (r renameHook) renameKey(cmd redis.Cmder) {
+	if !r.prefix.hasPrefix() {
 		return
 	}
 
@@ -49,7 +48,7 @@ func (r renameKey) renameKey(cmd redis.Cmder) {
 	}
 
 	switch strings.ToUpper(cmd.Name()) {
-	case "SELECT", "FUNCTION":
+	case "SELECT", "FUNCTION", "INFO":
 		// 无KEY指令
 	case
 		"RENAME", "RENAMENX",
@@ -80,15 +79,11 @@ func (r renameKey) renameKey(cmd redis.Cmder) {
 	}
 }
 
-func (r renameKey) rename(args []any, indexes ...int) {
+func (r renameHook) rename(args []any, indexes ...int) {
 	for _, i := range indexes {
 		if key, ok := args[i].(string); ok {
-			var builder strings.Builder
-			builder.WriteString(r.prefix)
-			builder.WriteString(r.separator)
-			builder.WriteString(key)
-
-			args[i] = builder.String()
+			newKey := r.prefix.join(key)
+			args[i] = newKey
 		}
 	}
 }
