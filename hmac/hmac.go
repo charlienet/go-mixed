@@ -80,7 +80,7 @@ func Sha512(key, msg []byte) bytesconv.BytesResult { return sum(sha512.New, key,
 
 func Sm3(key, msg []byte) bytesconv.BytesResult { return sum(sm3.New, key, msg) }
 
-func sum(f func() hash.Hash, msg, key []byte) bytesconv.BytesResult {
+func sum(f func() hash.Hash, key, msg []byte) bytesconv.BytesResult {
 	h := hmac.New(f, key)
 
 	h.Write(msg)
